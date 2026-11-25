@@ -866,7 +866,7 @@ function ruleText(q){
   return "Typed answers are quoted in your report. Only a tapped answer is scored.";
 }
 function drawQ(){
-  clearTimeout(advTimer); stopSpeech();
+  clearTimeout(advTimer); advTimer = null; stopSpeech();
   const s = seat(), q = s.qs[S.i], a = S.ans[q.id] || {}, n = s.qs.length;
   $("segs").innerHTML = s.qs.map((_, i) => `<i class="${i < S.i ? "done" : i === S.i ? "now" : ""}"></i>`).join("");
   $("qcount").textContent = `Question ${S.i + 1} of ${n}`;
@@ -894,13 +894,24 @@ function updNext(){
   const q = seat().qs[S.i], a = S.ans[q.id] || {};
   $("qnext").disabled = !(a.oi !== undefined && a.oi !== null) && !(a.text && a.text.trim());
 }
+function markPicked(a){
+  $("qopts").querySelectorAll(".opt").forEach(b => {
+    const on = String(a.oi) === b.dataset.i, ok = b.querySelector(".ok");
+    b.classList.toggle("on", on);
+    if (on && !ok) b.insertAdjacentHTML("beforeend", '<span class="ok">Picked</span>');
+    if (!on && ok) ok.remove();
+  });
+  updNext();
+}
 function pick(i){
   const q = seat().qs[S.i];
   const a = S.ans[q.id] = S.ans[q.id] || {};
-  a.oi = i === "ns" ? "ns" : +i;
+  const val = i === "ns" ? "ns" : +i;
+  if (advTimer && a.oi === val){ next(); return; }
+  clearTimeout(advTimer); advTimer = null;
+  a.oi = val;
   a.text = $("qtext").value;
-  const keepIdx = S.i;
-  drawQ();
+  markPicked(a);
   const o = a.oi === "ns" ? null : q.o[a.oi];
   let rx = "";
   if (a.oi === "ns") rx = q.type === "size" ? "Fine. We will use a middle figure and say so." : "Fine. We will estimate this one and mark it.";
@@ -908,10 +919,11 @@ function pick(i){
   else if (q.type === "size") rx = q.money ? "Noted. That rate drives the cost in Part 2." : `Noted: ${optLabel(q, o).toLowerCase()} ${q.unit}.`;
   else if (q.type === "goal") rx = "Noted. Your plan will start there.";
   $("qrx").textContent = rx; $("qrx").classList.add("show");
-  if (!$("qtext").value.trim()) advTimer = setTimeout(() => { if (S.i === keepIdx && !$("quiz").classList.contains("hide")) next(); }, 1150);
+  const keepIdx = S.i;
+  if (!$("qtext").value.trim()) advTimer = setTimeout(() => { advTimer = null; if (S.i === keepIdx && !$("quiz").classList.contains("hide")) next(); }, 900);
 }
 function next(){
-  clearTimeout(advTimer);
+  clearTimeout(advTimer); advTimer = null;
   const q = seat().qs[S.i];
   const a = S.ans[q.id] = S.ans[q.id] || {};
   a.text = $("qtext").value;
@@ -920,7 +932,7 @@ function next(){
 $("qnext").onclick = next;
 $("qback").onclick = () => { clearTimeout(advTimer); if (S.i === 0) goHome(); else { S.i--; drawQ(); } };
 $("qtext").addEventListener("input", () => {
-  clearTimeout(advTimer);
+  clearTimeout(advTimer); advTimer = null;
   const q = seat().qs[S.i]; const a = S.ans[q.id] = S.ans[q.id] || {};
   a.text = $("qtext").value; updNext();
 });
