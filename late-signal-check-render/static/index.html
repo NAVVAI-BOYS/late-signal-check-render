@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Late Signal Check | Rainmaker</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000'/%3E%3Ccircle cx='16' cy='30' r='16' fill='%235A6AA5'/%3E%3Cpath d='M7 13h4l3 6 4-10 3 7h4' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style id="appcss">
+/* VOICE: calm, sharp, premium legal intelligence, matching rmkr.ai
+   IDEA: a market signal travelling from the deal to everyone else; the reader finds where they sit on it
+   PICTURE: Rainmaker's own night sky glow over a black horizon, with a live constellation of the market
+   COLOUR and TYPE: sampled from rmkr.ai, black #000, glow #343F64 > #5A6AA5 > #A6B1D9, accent blue #3890F8, Inter
+   LAYOUT: dark bands like their site, glass panels, one accent blue */
+:root{
+  color-scheme:dark;
+  --bg:#000000;            /* rmkr.ai page ground */
+  --bg2:#07080C;
+  --glowDeep:#343F64;      /* sampled: upper glow */
+  --glowMid:#5A6AA5;       /* sampled: mid glow */
+  --glowLight:#A6B1D9;     /* sampled: horizon light */
+  --accent:#3890F8;        /* sampled: "BEYOND THE DATA" eyebrow */
+  --accent2:#5EA6FF;
+  --ink:#FFFFFF; --ink2:#B9BFD0; --mute:#7F879C;
+  --panel:rgba(255,255,255,.045); --panel2:rgba(255,255,255,.07); --line:rgba(255,255,255,.11); --line2:rgba(255,255,255,.2);
+  --b0:#F46B6B; --b1:#F2B544; --b2:#45C9B8; --b3:#5FDB8C;
+  --r:16px;
+  --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--bg);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:clip}
+h1,h2,h3,h4{font-weight:600;letter-spacing:-.03em;margin:0;line-height:1.08;text-wrap:balance}
+p{margin:0}
+button{font:inherit;cursor:pointer;color:inherit}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.hide{display:none!important}
+.eyebrow{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.22;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:30;background:rgba(0,0,0,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.06)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
+.logo{display:flex;align-items:center;gap:14px;text-decoration:none}
+.logo img{height:19px;width:auto;display:block}
+.logo span{font-size:12px;color:var(--mute);border-left:1px solid var(--line2);padding-left:14px;letter-spacing:.02em}
+.top .tag{font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:8px}
+.live{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(56,144,248,.6);animation:ping 2s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(56,144,248,.6)}80%,100%{box-shadow:0 0 0 10px rgba(56,144,248,0)}}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;background:#fff;color:#000;font-weight:600;padding:14px 24px;font-size:15px;text-decoration:none;transition:transform .15s,box-shadow .2s,background .2s;min-height:46px}
+.btn:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(166,177,217,.35)}
+.btn:disabled{background:rgba(255,255,255,.18);color:rgba(255,255,255,.5);cursor:not-allowed;transform:none;box-shadow:none}
+.btn.ghost{background:transparent;color:#fff;border:1px solid var(--line2)}
+.btn.ghost:hover{background:var(--panel2);box-shadow:none}
+.btn.blue{background:var(--accent);color:#fff}
+.btn:focus-visible,.opt:focus-visible,.role:focus-visible,.track:focus-visible{outline:2px solid var(--accent2);outline-offset:3px}
+
+/* hero */
+.hero{position:relative;overflow:hidden;padding:64px 0 0;isolation:isolate}
+.hero .sky{position:absolute;inset:0;z-index:-2;background:
+  radial-gradient(70% 70% at 50% 100%,var(--glowLight) 0%,var(--glowMid) 26%,var(--glowDeep) 52%,rgba(52,63,100,0) 78%),#000}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-1;opacity:.85}
+.hero .horizon{position:relative;height:150px;margin-top:-20px;z-index:1}
+.hero .horizon::before{content:"";position:absolute;left:-20%;right:-20%;top:40px;height:900px;border-radius:50%;background:#000;box-shadow:0 -6px 50px rgba(166,177,217,.55),0 -1px 0 rgba(220,228,255,.5)}
+.hero .inner{position:relative;z-index:2}
+.hero h1{font-size:clamp(38px,6vw,72px);margin:16px 0 18px;max-width:900px}
+.hero .lede{font-size:clamp(17px,1.8vw,21px);color:#E3E7F4;max-width:640px;font-weight:500}
+.hero .sub{font-size:16px;color:var(--ink2);max-width:600px;margin-top:10px}
+.starthead{margin:36px 0 14px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.starthead h2{font-size:19px;letter-spacing:-.01em}
+.starthead span{color:var(--ink2);font-size:14px}
+.samplerow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:18px;position:relative;z-index:3}
+.samplerow span{font-size:14px;color:#DDE2F0;max-width:520px}
+.samplebadge{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;border:1px solid rgba(242,181,68,.6);color:#F2B544;border-radius:999px;padding:6px 12px;margin-bottom:14px}
+.roles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;position:relative;z-index:3}
+.role{text-align:left;background:rgba(8,10,18,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line2);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:10px;transition:transform .2s,border-color .2s,background .2s;position:relative;overflow:hidden}
+.role::after{content:"";position:absolute;inset:0;background:radial-gradient(240px 140px at var(--mx,50%) var(--my,0%),rgba(166,177,217,.22),transparent 70%);opacity:0;transition:opacity .2s;pointer-events:none}
+.role:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.45);background:rgba(12,15,28,.7)}
+.role:hover::after{opacity:1}
+.role .ri{width:36px;height:36px;border-radius:10px;background:rgba(56,144,248,.16);display:grid;place-items:center;color:var(--accent2)}
+.role .rn{font-weight:600;font-size:17px;letter-spacing:-.01em}
+.role .rb{font-size:14px;color:var(--ink2);flex:1}
+.role .rq{font-size:12.5px;color:var(--mute)}
+.role .go{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;background:#fff;color:#000;font-weight:600;font-size:14px;border-radius:999px;padding:9px 16px}
+
+/* sections */
+.sec{padding:88px 0;position:relative}
+.sec.tint{background:linear-gradient(180deg,#000 0%,#06070D 100%)}
+.sec h2{font-size:clamp(30px,4vw,48px);margin-top:12px}
+.sec .intro{color:var(--ink2);margin-top:14px;max-width:640px;font-size:17px}
+.center{text-align:center}.center .intro{margin-left:auto;margin-right:auto}
+.glass{background:var(--panel);border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+
+/* signal line */
+.stage{margin-top:36px;padding:30px}
+.readout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:end;margin-bottom:22px}
+.rk{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.rv{font-size:clamp(26px,3vw,36px);font-weight:600;letter-spacing:-.03em;margin-top:4px;transition:color .2s}
+.rm{color:var(--ink2);font-size:15px}
+.who{margin-top:6px;font-size:14px;color:#fff;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.who b{color:var(--accent2);font-weight:600}
+.track{position:relative;height:74px;border-radius:14px;cursor:grab;touch-action:none;user-select:none;background:linear-gradient(90deg,#5FDB8C 0%,#45C9B8 30%,#F2B544 62%,#F46B6B 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
+.track:active{cursor:grabbing}
+.track .zones{position:absolute;inset:0;display:grid;grid-template-columns:repeat(4,1fr)}
+.track .zones div{border-right:1px solid rgba(0,0,0,.35);display:flex;align-items:flex-end;padding:10px 12px;font-size:12px;font-weight:700;letter-spacing:.08em;color:rgba(0,0,0,.72)}
+.track .zones div:last-child{border-right:0}
+.track .shade{position:absolute;top:0;bottom:0;right:0;background:rgba(0,0,0,.5);border-radius:0 14px 14px 0;pointer-events:none}
+.marker{position:absolute;top:-10px;bottom:-10px;width:2px;margin-left:-1px;background:#fff;pointer-events:none;box-shadow:0 0 18px rgba(255,255,255,.8)}
+.marker::after{content:"";position:absolute;top:50%;left:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:#000;border:3px solid #fff;box-shadow:0 0 0 6px rgba(255,255,255,.12),0 8px 24px rgba(0,0,0,.6)}
+.ends{display:flex;justify-content:space-between;margin-top:14px;font-size:13px;color:var(--mute)}
+.hint{font-size:13px;color:var(--mute);margin-top:14px;display:flex;gap:8px;align-items:center}
+
+/* what you get */
+.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:40px}
+.step{padding:20px;border-radius:18px;background:var(--panel);border:1px solid var(--line);position:relative;overflow:hidden}
+.step .si{width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--accent2);margin-bottom:14px}
+.step h3{font-size:16px;letter-spacing:-.01em;margin-bottom:6px}
+.step p{font-size:14px;color:var(--ink2)}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:56px;background:var(--line);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.fact{background:#05060A;padding:26px 22px}
+.fact b{font-size:clamp(34px,4vw,48px);font-weight:600;letter-spacing:-.04em;display:block;background:linear-gradient(180deg,#fff 30%,var(--glowLight));-webkit-background-clip:text;background-clip:text;color:transparent}
+.fact span{font-size:14px;color:var(--ink2)}
+.ctaend{position:relative;overflow:hidden;padding:110px 0 120px;text-align:center;isolation:isolate}
+.ctaend .sky{position:absolute;inset:0;z-index:-1;background:radial-gradient(60% 90% at 50% 120%,var(--glowMid) 0%,var(--glowDeep) 40%,transparent 75%)}
+.ctaend h2{font-size:clamp(30px,4vw,48px)}
+.ctaend p{color:var(--ink2);margin:14px 0 26px;font-size:17px}
+footer{border-top:1px solid var(--line);padding:26px 0;color:var(--mute);font-size:13px;background:#000}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+footer img{height:12px;opacity:.7}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+.rv.in{opacity:1;transform:none}
+
+/* questionnaire */
+.qpage{position:relative;min-height:calc(100vh - 68px);isolation:isolate;overflow:hidden}
+.qpage .sky,.gatepage .sky{position:absolute;inset:0;z-index:-1;background:radial-gradient(80% 50% at 50% 110%,var(--glowDeep) 0%,rgba(52,63,100,0) 70%),#000}
+.qwrap{max-width:780px;margin:0 auto;padding:34px 24px 70px}
+.segs{display:flex;gap:4px}
+.segs i{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.12);transition:background .3s}
+.segs i.done{background:var(--glowLight)}
+.segs i.now{background:var(--accent)}
+.qmeta{display:flex;justify-content:space-between;margin:14px 0 30px;font-size:13px;color:var(--mute)}
+.qmeta .area{color:var(--accent2);font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:12px}
+.qp{font-size:clamp(25px,3.4vw,36px);margin-bottom:26px;animation:qin .45s ease}
+@keyframes qin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.curs{display:flex;gap:6px;margin:-12px 0 18px}
+.curs button{border:1px solid var(--line2);background:transparent;border-radius:999px;padding:6px 14px;font-size:13px;min-height:34px}
+.curs button.on{background:#fff;color:#000;border-color:#fff}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;font-size:16px;display:flex;align-items:center;gap:14px;transition:border-color .15s,background .15s,transform .15s;min-height:56px;animation:qin .45s ease both}
+.opt:hover{border-color:rgba(255,255,255,.4);background:var(--panel2)}
+.opt .k{flex:none;width:28px;height:28px;border-radius:8px;border:1px solid var(--line2);display:grid;place-items:center;font-size:12px;color:var(--ink2);font-weight:600}
+.opt .t{flex:1}
+.opt.on{border-color:var(--accent);background:rgba(56,144,248,.14)}
+.opt.on .k{background:var(--accent);border-color:var(--accent);color:#fff}
+.opt .ok{font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.1em}
+.opt.ns{background:transparent;color:var(--ink2);font-size:15px}
+.rx{min-height:26px;margin:16px 0 4px;font-size:15px;color:var(--glowLight);font-weight:500;opacity:0;transform:translateY(4px);transition:opacity .25s,transform .25s}
+.rx.show{opacity:1;transform:none}
+.divider{display:flex;align-items:center;gap:12px;margin:22px 0 12px;color:var(--mute);font-size:13px}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.own label{display:block;font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:8px}
+.ownrow{display:flex;gap:8px;align-items:stretch}
+.own textarea{flex:1;min-height:74px;background:var(--panel);color:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 14px;font:inherit;font-size:16px;resize:vertical}
+.own textarea::placeholder{color:var(--mute)}
+.own textarea:focus{outline:none;border-color:var(--accent)}
+.speak{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:0 14px;font-size:14px;font-weight:600;color:var(--ink2);min-width:104px;display:flex;align-items:center;justify-content:center;gap:6px}
+.speak.on{border-color:var(--b0);color:var(--b0)}
+.own .rule{font-size:12.5px;color:var(--mute);margin-top:8px}
+.qnav{display:flex;justify-content:space-between;align-items:center;margin-top:28px;gap:10px}
+.keys{font-size:12px;color:var(--mute);text-align:center;margin-top:18px}
+.keys kbd{font-family:inherit;border:1px solid var(--line2);border-radius:5px;padding:1px 6px;margin:0 2px;color:var(--ink2)}
+
+/* gate */
+.gatepage{position:relative;min-height:calc(100vh - 68px);isolation:isolate;overflow:hidden;display:grid;place-items:center;padding:40px 24px}
+.gatecard{width:100%;max-width:500px;padding:34px}
+.gatecard h2{font-size:34px}
+.gatecard .sub{color:var(--ink2);margin:10px 0 24px}
+.ready{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap}
+.ready span{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--ink2)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:7px;color:var(--ink2)}
+.field input{width:100%;background:rgba(255,255,255,.05);color:#fff;border:1px solid var(--line2);border-radius:12px;padding:13px;font:inherit;font-size:16px}
+.field input:focus{outline:none;border-color:var(--accent)}
+.err{color:var(--b0);font-size:14px;min-height:20px;margin-bottom:8px}
+.small{font-size:12.5px;color:var(--mute);margin-top:14px}
+
+/* report */
+.rhero{position:relative;overflow:hidden;padding:56px 0 64px;isolation:isolate}
+.rhero .sky{position:absolute;inset:0;z-index:-1;background:radial-gradient(70% 80% at 80% 110%,var(--glowMid) 0%,var(--glowDeep) 35%,rgba(52,63,100,0) 70%),#000}
+.rhero h1{font-size:clamp(38px,5.4vw,64px);margin:14px 0 8px}
+.rhero .who2{color:var(--ink2)}
+.vgrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:18px;margin-top:34px}
+.vcard{padding:24px}
+.vcard .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.gaugewrap{display:flex;gap:24px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.gauge{width:170px;height:170px;flex:none;position:relative}
+.gauge svg{width:100%;height:100%;transform:rotate(-90deg)}
+.gauge .gv{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.gauge .gv b{font-size:46px;font-weight:600;letter-spacing:-.04em;line-height:1}
+.gauge .gv small{display:block;font-size:13px;color:var(--mute);margin-top:4px}
+.gaugetxt{flex:1;min-width:200px}
+.gaugetxt .bn{font-size:22px;font-weight:600;letter-spacing:-.02em}
+.gaugetxt p{color:var(--ink2);font-size:15px;margin-top:6px}
+.bandstrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:20px}
+.bandstrip div{border-radius:10px;padding:9px 10px;font-size:12px;font-weight:600;background:rgba(255,255,255,.04);color:var(--mute);border:1px solid var(--line)}
+.bandstrip div span{display:block;font-weight:400;opacity:.8;margin-top:2px}
+.bandstrip div.on{color:#000}
+.radar{width:100%;height:auto;display:block}
+.radar .ax{stroke:rgba(255,255,255,.12)}
+.radar .ring{fill:none;stroke:rgba(255,255,255,.08)}
+.radar .shape{fill:rgba(56,144,248,.22);stroke:var(--accent2);stroke-width:2}
+.radar .pt{fill:#fff}
+.radar .lb{fill:var(--ink2);font-size:13px;font-family:var(--sans)}
+.radar .lv{fill:#fff;font-size:14px;font-weight:600;font-family:var(--sans)}
+.radar .six{fill:none;stroke:rgba(242,181,68,.45);stroke-dasharray:4 4}
+.radarkey{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink2);margin-top:6px}
+.radarkey i{display:inline-block;width:16px;height:0;border-top:2px solid var(--accent2);vertical-align:middle;margin-right:6px}
+.radarkey i.d{border-top:2px dashed rgba(242,181,68,.7)}
+.howread{margin-top:18px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.howread div{font-size:14px;color:var(--ink2);border-left:2px solid var(--accent);padding-left:12px}
+.howread b{color:#fff;display:block;font-weight:600}
+.pnav{position:sticky;top:68px;z-index:20;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line);border-top:1px solid var(--line)}
+.pnav .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none}
+.pnav a{flex:none;white-space:nowrap;font-size:13px;font-weight:600;color:var(--ink2);text-decoration:none;padding:8px 14px;border-radius:999px;border:1px solid var(--line)}
+.pnav a:hover,.pnav a.on{background:#fff;color:#000;border-color:#fff}
+.part{padding:72px 0;border-bottom:1px solid var(--line)}
+.part h2{font-size:clamp(28px,3.4vw,40px);margin:12px 0 12px}
+.part .lead{color:var(--ink2);max-width:720px;font-size:16.5px}
+.explain{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:18px}
+.explain .et{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--mute);margin-bottom:8px}
+.explain ul{margin:0;padding-left:18px;color:var(--ink2);font-size:14.5px}
+.explain li{margin:4px 0}
+.areas{display:grid;gap:16px;margin-top:28px}
+.arow{display:grid;grid-template-columns:220px minmax(0,1fr) 80px;gap:16px;align-items:center}
+.arow .an{font-weight:600}
+.arow .bar{height:10px;background:rgba(255,255,255,.07);border-radius:5px;overflow:hidden;position:relative}
+.arow .bar::after{content:"";position:absolute;left:60%;top:-3px;bottom:-3px;border-left:1px dashed rgba(242,181,68,.6)}
+.arow .bar i{display:block;height:100%;border-radius:5px;width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.arow .av{font-size:22px;font-weight:600;text-align:right;letter-spacing:-.02em}
+.est{font-size:12px;color:var(--mute);font-weight:400}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:28px}
+.box{padding:22px}
+.box h3{font-size:20px;margin-bottom:10px;letter-spacing:-.02em}
+.box ul{margin:0;padding-left:18px}
+.box li{margin:7px 0;font-size:15px;color:var(--ink2)}
+.box li b{color:#fff;font-weight:600}
+.box.start{background:linear-gradient(160deg,rgba(56,144,248,.22),rgba(52,63,100,.25));border-color:rgba(94,166,255,.4)}
+.box .tagl{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--accent2);margin-bottom:6px}
+.bignum{font-size:clamp(48px,7vw,88px);font-weight:600;letter-spacing:-.05em;line-height:1;margin:26px 0 10px;background:linear-gradient(180deg,#fff 40%,var(--glowLight));-webkit-background-clip:text;background-clip:text;color:transparent}
+.bignum small{font-size:20px;letter-spacing:-.01em;-webkit-text-fill-color:var(--ink2);color:var(--ink2)}
+.working{font-family:ui-monospace,Menlo,monospace;font-size:13.5px;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:12px 14px;border-radius:12px;color:var(--ink2);margin-top:14px;overflow-x:auto}
+.lever{margin-top:20px;padding:20px}
+.lever label{font-weight:600;font-size:15px;display:flex;justify-content:space-between;gap:10px}
+input[type=range]{width:100%;margin-top:12px;accent-color:var(--accent);height:28px}
+.lever .lv{font-size:30px;font-weight:600;letter-spacing:-.03em;margin-top:6px}
+.curpick{display:inline-flex;gap:4px;margin-left:10px;vertical-align:middle}
+.curpick button{border:1px solid var(--line2);background:transparent;border-radius:999px;padding:3px 11px;font-size:12.5px;min-height:28px}
+.curpick button.on{background:#fff;color:#000;border-color:#fff}
+.gap{border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-top:18px;background:rgba(255,255,255,.02)}
+.gaphead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03)}
+.gaphead .gn{font-size:11.5px;font-weight:600;color:var(--mute);letter-spacing:.12em;text-transform:uppercase}
+.gaphead .gt{font-weight:600;flex:1;font-size:16px}
+.sev{font-size:12px;font-weight:700;border-radius:999px;padding:4px 11px;color:#000}
+.sev.high{background:var(--b0)}.sev.med{background:var(--b1)}
+.gapbody{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.gapbody>div{padding:18px}
+.gapbody .fixcol{background:linear-gradient(160deg,rgba(56,144,248,.13),rgba(56,144,248,.04));border-left:1px solid var(--line)}
+.gapbody h4{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:12px;font-weight:600}
+.gapbody .fixcol h4{color:var(--accent2)}
+.gapbody ul{margin:0;padding:0;list-style:none}
+.gapbody li{margin:0 0 12px;font-size:15px;color:#E6E9F2}
+.gapbody li b{display:block;font-size:12px;color:var(--mute);font-weight:600;margin-bottom:2px}
+.feat{display:inline-block;border:1px solid rgba(94,166,255,.5);color:var(--accent2);border-radius:999px;padding:3px 11px;font-size:13px;font-weight:600}
+.quote{font-style:italic;color:#fff}
+.phases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:30px;position:relative}
+.phase{padding:22px;position:relative}
+.phase .dot{width:14px;height:14px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px rgba(56,144,248,.2);margin-bottom:16px}
+.phase .pd{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent2)}
+.phase h3{font-size:20px;margin:8px 0 10px;letter-spacing:-.02em}
+.phase ul{margin:0;padding-left:18px;font-size:14.5px;color:var(--ink2)}
+.phase li{margin:6px 0}
+.phase .gl{font-size:12px;color:var(--b2);font-weight:600;margin-top:10px}
+.tw{overflow-x:auto}
+table.rec{width:100%;border-collapse:collapse;margin-top:22px;font-size:14.5px}
+.rec th{text-align:left;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);padding:10px 8px;border-bottom:1px solid var(--line2);font-weight:600}
+.rec td{padding:12px 8px;border-bottom:1px solid var(--line);vertical-align:top;color:#E6E9F2}
+.rec td.ef{color:var(--ink2);white-space:nowrap}
+.closing{position:relative;overflow:hidden;padding:96px 0;text-align:center;isolation:isolate}
+.closing .sky{position:absolute;inset:0;z-index:-1;background:radial-gradient(60% 100% at 50% 120%,var(--glowLight) 0%,var(--glowMid) 25%,var(--glowDeep) 50%,transparent 80%),#000}
+.closing h2{font-size:clamp(30px,4vw,50px)}
+.closing p{color:#DDE2F0;margin:14px auto 26px;max-width:560px;font-size:17px}
+.closing .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.honest{font-size:13px;color:#C9D0E6;margin-top:22px}
+/* shortlist */
+.sl{margin-top:26px;padding:22px}
+.sl h3{font-size:22px;letter-spacing:-.02em}
+.sl .slg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:16px}
+.sl .slg label{font-size:13px;font-weight:600;color:var(--ink2)}
+.sl table{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}
+.sl th{text-align:left;font-size:11.5px;color:var(--mute);padding:8px 6px;border-bottom:1px solid var(--line2);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.sl td{padding:8px 6px;border-bottom:1px solid var(--line)}
+.sl td input[type=text]{width:100%;min-width:120px;background:rgba(255,255,255,.05);color:#fff;border:1px solid var(--line2);border-radius:10px;padding:9px;font:inherit;font-size:16px}
+.sl select{background:#0B0D16;color:#fff;border:1px solid var(--line2);border-radius:10px;padding:8px;font:inherit;font-size:16px}
+.sl .tot{font-size:22px;font-weight:600;letter-spacing:-.02em}
+.sl tr.win td{background:rgba(56,144,248,.12)}
+.sl .wbar{height:4px;border-radius:2px;background:var(--accent);margin-top:4px;transition:width .3s}
+.checks{list-style:none;padding:0;margin:18px 0 0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.checks li{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 14px;font-size:14.5px;display:flex;gap:12px;align-items:flex-start}
+.checks li i{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;color:#000;font-weight:700}
+.checks li.y i{background:var(--b3)}.checks li.n i{background:var(--b0)}
+
+@media (max-width:980px){
+  .roles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .vgrid,.two{grid-template-columns:minmax(0,1fr)}
+  .phases{grid-template-columns:minmax(0,1fr)}
+  .howread{grid-template-columns:minmax(0,1fr)}
+  .sl .slg{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:700px){
+  .gapbody{grid-template-columns:minmax(0,1fr)}
+  .gapbody .fixcol{border-left:0;border-top:1px solid var(--line)}
+  .arow{grid-template-columns:minmax(0,1fr) 64px;gap:8px 12px}
+  .arow .bar{grid-column:1 / -1;grid-row:2}
+  .checks{grid-template-columns:minmax(0,1fr)}
+  .readout{grid-template-columns:minmax(0,1fr)}
+  .track .zones div{font-size:10px;padding:8px;letter-spacing:.04em}
+  .rec thead{display:none}
+  .rec tr{display:block;border-bottom:1px solid var(--line);padding:10px 0}
+  .rec td{display:block;border:0;padding:3px 0}
+  .rec td.ef{white-space:normal;color:var(--accent2);font-size:13px}
+}
+@media (max-width:600px){
+  .hero{padding-top:34px}
+  .hero h1{font-size:36px}
+  .hero .sub{display:none}
+  .roles{grid-template-columns:minmax(0,1fr);gap:10px}
+  .role{padding:16px;gap:8px}
+  .role .ri{display:none}
+  .starthead{margin:22px 0 10px}
+  .top .tag{display:none}
+  .logo span{display:none}
+  .bandstrip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{grid-template-columns:minmax(0,1fr)}
+  .sec{padding:64px 0}
+  .stage{padding:20px}
+  .gauge{width:140px;height:140px}
+  .gauge .gv b{font-size:38px}
+  .keys{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+@media print{.top,.pnav,.closing .row{display:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#" id="homeLink"><img src="data:image/png;base64,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" alt="Rainmaker"><span>The Late Signal Check</span></a>
+  <span class="tag"><span class="live"></span>Legal market intelligence</span>
+</div></header>
+
+<!-- HOME -->
+<main id="home">
+  <section class="hero">
+    <div class="sky"></div><canvas id="net" aria-hidden="true"></canvas><div class="grain"></div>
+    <div class="wrap inner">
+      <div class="eyebrow">The Late Signal Check</div>
+      <h1>The Legal Market Moves. How Late Do You Hear?</h1>
+      <p class="lede">Deals, lawyer moves and mandates reach some firms on day one and others weeks later.</p>
+      <p class="sub">Answer a few quick questions and get your score, what late signals cost you, and a 90 day plan.</p>
+      <div class="starthead" id="start"><h2>Start here: pick your role</h2><span>About 4 minutes</span></div>
+      <div class="roles" id="roles"></div>
+      <div class="samplerow"><button class="btn ghost" id="sampleBtn">See a sample report</button><span>A finished report for Harlow &amp; Pike LLP, a made up mid size firm, so you can see the output first.</span></div>
+    </div>
+    <div class="horizon"></div>
+  </section>
+
+  <section class="sec"><div class="wrap">
+    <div class="center rv"><div class="eyebrow">Where you sit</div>
+    <h2>Where On This Line Do You Hear About A Deal?</h2>
+    <p class="intro">The left end is the day a deal is signed. The right end is the day everyone knows. Drag the marker: the further right, the more rivals heard before you.</p></div>
+    <div class="stage glass rv">
+      <div class="readout">
+        <div><div class="rk">You hear about it</div><div class="rv" id="hvName">Hearing it first</div><div class="rm" id="hvMean"></div></div>
+        <div><div class="rk">Who else already knows</div><div class="who" id="hvWho"></div></div>
+      </div>
+      <div class="track" id="track" tabindex="0" role="slider" aria-label="Where you hear about a deal" aria-valuemin="0" aria-valuemax="100">
+        <div class="zones"><div>FIRST</div><div>IN TIME</div><div>SECOND HAND</div><div>LAST</div></div>
+        <div class="shade" id="shade"></div>
+        <div class="marker" id="marker"></div>
+      </div>
+      <div class="ends"><span>Deal signed</span><span>Everyone knows</span></div>
+      <div class="hint">Drag the marker, or use the arrow keys. The check places you on this line for real.</div>
+    </div>
+  </div></section>
+
+  <section class="sec tint"><div class="wrap">
+    <div class="rv"><div class="eyebrow">What you get</div><h2>Five Parts. Your Numbers Only.</h2></div>
+    <div class="steps" id="steps"></div>
+    <div class="facts rv">
+      <div class="fact"><b data-count="15000" data-suffix="K+" data-div="1000">0</b><span>deals tracked, with the firms and lawyers on each side</span></div>
+      <div class="fact"><b data-count="5000" data-suffix="K" data-div="1000">0</b><span>lawyer moves recorded</span></div>
+      <div class="fact"><b data-count="104000" data-suffix="K" data-div="1000">0</b><span>lawyer profiles</span></div>
+      <div class="fact"><b data-count="225">0</b><span>PE firm profiles</span></div>
+    </div>
+  </div></section>
+
+  <section class="ctaend"><div class="sky"></div><div class="wrap rv">
+    <h2>Find Out Where You Really Sit.</h2>
+    <p>Pick your role and answer a few quick questions.</p>
+    <button class="btn" id="toStart">Start the check</button>
+  </div></section>
+</main>
+
+<!-- QUESTIONS -->
+<main id="quiz" class="hide"><div class="qpage"><div class="sky"></div><div class="qwrap">
+  <div class="segs" id="segs"></div>
+  <div class="qmeta"><span id="qcount"></span><span class="area" id="qarea"></span></div>
+  <h2 class="qp" id="qprompt"></h2>
+  <div class="curs hide" id="qcurs"></div>
+  <div class="opts" id="qopts"></div>
+  <div class="rx" id="qrx"></div>
+  <div class="divider">or answer it in your own words</div>
+  <div class="own">
+    <label for="qtext">Your own words (optional)</label>
+    <div class="ownrow"><textarea id="qtext" placeholder="Type or speak your answer"></textarea><button class="speak" id="qspeak" type="button">Speak it</button></div>
+    <div class="rule" id="qrule"></div>
+  </div>
+  <div class="qnav"><button class="btn ghost" id="qback">Back</button><button class="btn" id="qnext" disabled>Continue</button></div>
+  <div class="keys">Keyboard: <kbd>1</kbd> to <kbd>4</kbd> to pick, <kbd>N</kbd> for not sure, <kbd>Enter</kbd> to continue</div>
+</div></div></main>
+
+<!-- GATE -->
+<main id="gate" class="hide"><div class="gatepage"><div class="sky"></div>
+  <div class="gatecard glass">
+    <div class="eyebrow">Your report is ready</div>
+    <h2 style="margin-top:10px">Where Should We Send It?</h2>
+    <p class="sub">Your report opens straight away once you add your details.</p>
+    <div class="ready" id="readyChips"></div>
+    <div class="field"><label for="gName">Your name</label><input id="gName" autocomplete="name"></div>
+    <div class="field"><label for="gOrg">Firm or company</label><input id="gOrg" autocomplete="organization"></div>
+    <div class="field"><label for="gEmail">Email</label><input id="gEmail" type="email" autocomplete="email"></div>
+    <div class="err" id="gErr"></div>
+    <button class="btn" id="gGo" style="width:100%">Show my report</button>
+    <p class="small">Work or personal email both work. We only use it to send you your report.</p>
+  </div>
+</div></main>
+
+<!-- REPORT -->
+<main id="report" class="hide"></main>
+
+<footer><div class="wrap">
+  <img src="data:image/png;base64,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" alt="Rainmaker">
+  <span>These checks are written by Rainmaker, who benefit if you find gaps. Treat it as a starting point, not a verdict.</span>
+</div></footer>
+
+<script>
+// The Late Signal Check: all copy lives here
+const HEAR_BANDS = [
+  {n:"Hearing it last", m:"Most of what matters reaches you after a rival has acted on it."},
+  {n:"Hearing it second hand", m:"You hear about the market, but usually through someone else and late."},
+  {n:"Hearing it in time", m:"You catch most things in time, with gaps that cost you now and then."},
+  {n:"Hearing it first", m:"You see deals and moves early and act on them while they are live."}
+];
+
+const SIZE_TEAM = [
+  {id:"s1", type:"size", key:"people", p:"How many people in your team spend time pulling market data, such as deals, news and moves?",
+   o:[{t:"1 or 2",v:2},{t:"3 to 5",v:4},{t:"6 to 10",v:8},{t:"More than 10",v:14}], unit:"people"},
+  {id:"s2", type:"size", key:"hours", p:"Roughly how many hours a week does each of them spend searching for it?",
+   o:[{t:"About 1",v:1},{t:"About 3",v:3},{t:"About 6",v:6},{t:"10 or more",v:10}], unit:"hours a week each"},
+  {id:"s3", type:"size", key:"rate", money:true, p:"What is an hour of their time worth to the firm?",
+   o:[{v:{GBP:75,USD:100,EUR:90}},{v:{GBP:150,USD:200,EUR:175}},{v:{GBP:300,USD:400,EUR:350}},{v:{GBP:500,USD:650,EUR:575}}], unit:"an hour"}
+];
+
+const SEATS = {
+firm: {
+  label:"Firm leader or BD head", short:"Firm leader / BD",
+  blurb:"How early you see deals, moves and mandates in your market.",
+  bands: HEAR_BANDS, part2:"time",
+  areas:["Deals","People moves","Hearing early","Acting on it"],
+  cta:{t:"See your market in Rainmaker", sub:"Deals, moves, news and rankings for your practices, in one feed."},
+  qs:[
+    ...SIZE_TEAM,
+    {id:"f1",type:"score",a:0,p:"When a rival wins a deal in your practice area, how do you find out who acted and for whom?",
+     o:[{t:"We usually don't find out",s:1.5,rx:"So those wins never reach your pitch prep."},
+        {t:"Someone spots it in the press, weeks later",s:4,rx:"Weeks late is after the client has moved on."},
+        {t:"We check a few paid sources by hand",s:6.5,rx:"Works, but it costs someone an afternoon each time."},
+        {t:"One feed shows us the firms, lawyers and sides",s:9,rx:"That is the standard most firms are aiming for."}],
+     fix:{move:"See every deal in your practice in one place",hurt:"Rival wins tell you who is buying legal work and who they trust. Missing them means pitching blind.",work:"Set up one deal feed for your practices and jurisdictions, showing the firms, lawyers and sides on each deal.",why:"When rival wins land in one place, nobody has to hunt for them.",feat:"Deals",plan:"Turn on a deal feed for your top three practice areas and share it with the BD team."}},
+    {id:"f2",type:"score",a:0,p:"Could you list the firms your top 20 target clients used on their last deals?",
+     o:[{t:"No, we would be guessing",s:1.5,rx:"Then every pitch starts without knowing who you are up against."},
+        {t:"For a handful of them",s:4,rx:"A handful leaves most of your targets unknown."},
+        {t:"For most, after a day of digging",s:6.5,rx:"The answer exists, it just costs a day."},
+        {t:"Yes, in a few minutes",s:9,rx:"That is real pitch intelligence."}],
+     fix:{move:"Know who your targets use today",hurt:"If you do not know which firm a target used last, you cannot say why you are better.",work:"Build a list of 20 target clients and pull the counsel each one used on its last three deals.",why:"A named incumbent turns a generic pitch into a direct comparison.",feat:"Counsel profiles",plan:"Pull incumbent counsel for your top 20 targets and add it to each pitch file."}},
+    {id:"f3",type:"score",a:1,p:"When a partner at a rival firm moves, how soon do you know?",
+     o:[{t:"When it hits the legal press",s:1.5,rx:"By then the clients have usually been called."},
+        {t:"When someone in the market mentions it",s:4,rx:"Gossip is fast, but patchy."},
+        {t:"Within a few days, we watch for it",s:6.5,rx:"Good, as long as the person watching never has a busy week."},
+        {t:"Same day, it comes to us",s:9,rx:"Same day is when the clients are still up for grabs."}],
+     fix:{move:"Hear about rival moves the day they happen",hurt:"A partner move puts their clients in play for a short window. Late news means the window has closed.",work:"Follow the rival firms in your practices so every lateral hire and departure reaches you the same day.",why:"The window is days long, so the news has to arrive in days.",feat:"Moves",plan:"Follow moves at your ten closest rival firms and agree who calls whom when one lands."}},
+    {id:"f4",type:"score",a:1,p:"When a contact at a client moves to a new company, what happens?",
+     o:[{t:"We often never notice",s:1.5,rx:"That is a warm relationship walking into a new budget."},
+        {t:"We notice months later",s:4,rx:"Months later, someone else is already advising them."},
+        {t:"Their partner usually spots it",s:6.5,rx:"That depends on the partner, which makes it luck."},
+        {t:"We are alerted and someone reaches out",s:9,rx:"That is how new clients get won."}],
+     fix:{move:"Follow your contacts when they move",hurt:"A contact who moves takes your relationship to a new company. Unnoticed, it becomes someone else's client.",work:"Track the in house counsel you work with, so a move triggers a call from the partner who knows them.",why:"The relationship is already warm, so speed is the only thing that decides it.",feat:"In house counsel profiles",plan:"List the 50 in house contacts who matter most and set alerts for any change of role."}},
+    {id:"f5",type:"score",a:2,p:"Where does most of your market news come from today?",
+     o:[{t:"Partners forwarding things",s:1.5,rx:"So the news depends on who reads what."},
+        {t:"Newsletters and the legal press",s:4,rx:"Everyone else reads those too, at the same time."},
+        {t:"Several paid tools, checked by hand",s:6.5,rx:"Good coverage, high effort."},
+        {t:"One place, filtered to our practices",s:9,rx:"That is the setup that saves the most time."}],
+     fix:{move:"Put your market news in one filtered place",hurt:"News spread across inboxes and tools gets read late or not at all.",work:"Set up one feed filtered by jurisdiction, practice area and the firms you follow.",why:"One place means one habit, so the news actually gets read.",feat:"Personalised feed",plan:"Replace forwarded news with one shared feed filtered to your practices."}},
+    {id:"f6",type:"score",a:2,p:"How often do you hear about a mandate after a rival has already pitched?",
+     o:[{t:"Most of the time",s:1.5,rx:"That means you are mostly reacting."},
+        {t:"Often",s:4,rx:"Often adds up to a lot of lost pitches."},
+        {t:"Now and then",s:6.5,rx:"Now and then still adds up over a year."},
+        {t:"Rarely",s:9,rx:"You are usually in early."}],
+     fix:{move:"Get in before the pitch",hurt:"Once a rival has pitched, you are competing against a shortlist you were not on.",work:"Watch the signals that come before a mandate: deals announced, funds raised, people moving into new roles.",why:"Those signals show up weeks before the mandate does.",feat:"News linked to deals and people",plan:"Agree three early signals per practice and check them every Monday."}},
+    {id:"f7",type:"score",a:3,p:"When someone spots an opportunity, what happens next?",
+     o:[{t:"It depends who spots it",s:1.5,rx:"So most of them quietly die."},
+        {t:"It goes in an email and often stops there",s:4,rx:"An email is not an owner."},
+        {t:"It goes to BD and is followed up",s:6.5,rx:"Solid, as long as BD has time."},
+        {t:"It has an owner and a date the same day",s:9,rx:"That is a real process."}],
+     fix:{move:"Give every opportunity an owner",hurt:"A spotted opportunity with no owner is the same as one nobody spotted.",work:"Agree a simple rule: every signal gets a named owner and a next step date on the day it lands.",why:"An owner and a date are what turn a signal into a call.",feat:"Subscriptions and alerts",plan:"Start a weekly 15 minute review where every new signal leaves with an owner."}},
+    {id:"f8",type:"score",a:3,p:"How do you show the market where your firm ranks?",
+     o:[{t:"We don't",s:1.5,rx:"Then clients only see the rivals who do."},
+        {t:"Directory rankings once a year",s:4,rx:"Once a year is out of date by the spring."},
+        {t:"Our own deal lists in pitches",s:6.5,rx:"Useful, but clients know you chose the list."},
+        {t:"Live rankings from our actual deal record",s:9,rx:"That is proof a client can check."}],
+     fix:{move:"Show where you rank, from real deals",hurt:"Clients compare firms on track record. If yours is not visible, they compare you on price.",work:"Use live rankings from your actual deal record in pitches and on partner profiles.",why:"A ranking built from deals is proof a client can check for themselves.",feat:"Rankings",plan:"Add your live ranking by deal value to your next five pitches."}},
+    {id:"g",type:"goal",p:"What matters most to you right now?",
+     o:[{t:"Win more mandates",a:3},{t:"Spot opportunities earlier",a:2},{t:"Spend less time searching",a:0},{t:"Know when people move",a:1}]}
+  ]},
+
+recruit: {
+  label:"Recruiting or practice leader", short:"Recruiting / practice",
+  blurb:"How early you see lateral moves, flight risk and who to hire.",
+  bands: HEAR_BANDS, part2:"time",
+  areas:["Market moves","Your own partners","Hiring targets","Hearing early"],
+  cta:{t:"Track every move in Rainmaker", sub:"Lateral hires, departures and deal records for every lawyer in your market."},
+  qs:[
+    ...SIZE_TEAM,
+    {id:"r1",type:"score",a:0,p:"How do you track lateral moves in your market today?",
+     o:[{t:"We don't, really",s:1.5,rx:"Then every move is a surprise."},
+        {t:"Headhunters tell us",s:4,rx:"Headhunters tell you what suits them."},
+        {t:"We read the legal press and keep a list",s:6.5,rx:"A list someone keeps is a list that slips."},
+        {t:"Every move in our practices comes to us",s:9,rx:"That is full sight of the market."}],
+     fix:{move:"See every lateral move in your practices",hurt:"Without a view of who is moving where, you cannot tell which rivals are building and which are losing people.",work:"Follow lateral hires, departures and leadership changes across your practices and rival firms.",why:"A complete record of moves shows the pattern, not just the headlines.",feat:"Moves",plan:"Set up moves tracking for your practices and the ten rivals you lose people to."}},
+    {id:"r2",type:"score",a:0,p:"Could you name the last five partners who joined rival firms in your practice?",
+     o:[{t:"No",s:1.5,rx:"So the market's hiring is invisible to you."},
+        {t:"One or two",s:4,rx:"That leaves most of it unknown."},
+        {t:"Yes, after some research",s:6.5,rx:"Known, but slowly."},
+        {t:"Yes, straight away",s:9,rx:"That is how a recruiting lead should know the market."}],
+     fix:{move:"Know who your rivals are hiring",hurt:"Rival hiring shows where they plan to grow, and which of your clients they are chasing.",work:"Keep a live list of recent partner hires at rival firms, with the practice and clients each one brought.",why:"Seeing their hires tells you their plan before they announce it.",feat:"Moves and lawyer profiles",plan:"Review the last 12 months of rival partner hires in your practice with practice heads."}},
+    {id:"r3",type:"score",a:1,p:"How would you know a partner of yours was being approached?",
+     o:[{t:"When they hand in notice",s:1.5,rx:"By then it is a negotiation, not a conversation."},
+        {t:"Through gossip, sometimes",s:4,rx:"Sometimes means you miss the rest."},
+        {t:"Regular check ins with partners",s:6.5,rx:"Good, but people rarely say it in a check in."},
+        {t:"We watch the signals: their team, deals and rival hiring",s:9,rx:"That is early warning."}],
+     fix:{move:"Spot flight risk before the notice",hurt:"A partner rarely leaves alone. Their team and clients often follow within months.",work:"Watch the signals: a rival hiring in their practice, their team members moving, their deal flow dropping.",why:"Those signals show up months before a resignation does.",feat:"Moves and deal activity",plan:"Flag your 20 most valuable partners and review the signals around each one monthly."}},
+    {id:"r4",type:"score",a:1,p:"In the last two years, how many partners left your firm with little warning?",
+     o:[{t:"Several",s:1.5,rx:"Several is a pattern, not bad luck."},
+        {t:"Two or three",s:4,rx:"Each one takes clients with them."},
+        {t:"One",s:6.5,rx:"One is still a book of business gone."},
+        {t:"None",s:9,rx:"Good, keep it that way."}],
+     fix:{move:"Cut surprise departures",hurt:"Every surprise exit takes a book of business and usually part of a team.",work:"Hold a short stay conversation with any partner whose signals change, before a rival gets there.",why:"A conversation in time is cheaper than a counter offer after notice.",feat:"Moves",plan:"Agree who holds the stay conversation when a partner's signals change."}},
+    {id:"r5",type:"score",a:2,p:"When you want to hire a partner, how do you build the list?",
+     o:[{t:"The headhunter's list only",s:1.5,rx:"So you see who they chose to show you."},
+        {t:"Names our partners suggest",s:4,rx:"That is the people your partners already know."},
+        {t:"Our own research, by hand",s:6.5,rx:"Thorough, and slow."},
+        {t:"From their deal record and clients",s:9,rx:"That is hiring on evidence."}],
+     fix:{move:"Build hiring lists from deal records",hurt:"A list built from who you know misses the partners actually doing the work you want.",work:"Search lawyers by the deals they have done, the sides they acted for and the clients they serve.",why:"The deal record shows who is doing the work, not just who is visible.",feat:"Lawyer profiles and Deals",plan:"Build your next partner long list from deal records in the target practice."}},
+    {id:"r6",type:"score",a:2,p:"Can you check a candidate's real deal record before the first meeting?",
+     o:[{t:"No, we take their word",s:1.5,rx:"Then the claims in the room go unchecked."},
+        {t:"Only what is on their firm bio",s:4,rx:"Bios are written to impress."},
+        {t:"Partly, from press and directories",s:6.5,rx:"Partly checked is partly trusted."},
+        {t:"Yes, deal by deal",s:9,rx:"That makes for a strong first meeting."}],
+     fix:{move:"Check the record before you meet",hurt:"Paying for a book of business you have not checked is the most expensive mistake in lateral hiring.",work:"Pull each candidate's deals, sides and clients before the first meeting.",why:"You walk in knowing what they have done, not just what they say.",feat:"Lawyer profiles",plan:"Make a deal record check part of every candidate pack."}},
+    {id:"r7",type:"score",a:3,p:"Where does your moves news come from?",
+     o:[{t:"Word of mouth",s:1.5,rx:"Word of mouth is late and patchy."},
+        {t:"Legal press and LinkedIn",s:4,rx:"Everyone sees those at the same time."},
+        {t:"Several sources, checked by hand",s:6.5,rx:"Good coverage, heavy effort."},
+        {t:"One feed, filtered to our practices",s:9,rx:"That is the efficient setup."}],
+     fix:{move:"Get moves news from one filtered feed",hurt:"Moves spread across press, LinkedIn and gossip get noticed late or missed.",work:"Set up one feed of moves filtered by your practices, jurisdictions and the firms you follow.",why:"One feed means nothing depends on who happened to scroll that day.",feat:"Personalised feed",plan:"Replace manual press checks with one moves feed shared with practice heads."}},
+    {id:"r8",type:"score",a:3,p:"How often does a rival hire a partner you wanted before you knew they were available?",
+     o:[{t:"Most of the time",s:1.5,rx:"So you are mostly second in line."},
+        {t:"Often",s:4,rx:"Often adds up to a lot of lost hires."},
+        {t:"Now and then",s:6.5,rx:"Now and then still hurts."},
+        {t:"Rarely",s:9,rx:"You are usually early."}],
+     fix:{move:"Hear about available partners first",hurt:"The best laterals are off the market within weeks. Late news means you only see who is left.",work:"Watch for the signals that a partner may move: their firm losing people, a merger, a leadership change.",why:"Those signals come before the partner is openly available.",feat:"News and Moves",plan:"Agree three move signals to watch each week for your target practices."}},
+    {id:"g",type:"goal",p:"What matters most to you right now?",
+     o:[{t:"Keep our partners",a:1},{t:"Hire better partners",a:2},{t:"Hear about moves first",a:3},{t:"Spend less time searching",a:0}]}
+  ]},
+
+buyer: {
+  label:"PE firm or in house counsel", short:"PE / in house",
+  blurb:"How well you choose, check and track your outside counsel.",
+  bands:[
+    {n:"Choosing in the dark", m:"Counsel is picked on habit, with little to check it against."},
+    {n:"Choosing on reputation", m:"You pick on name and past experience, with a few checks."},
+    {n:"Choosing with some data", m:"You compare firms with real data in places."},
+    {n:"Choosing on the record", m:"Counsel is chosen and reviewed on its actual track record."}],
+  part2:"matters",
+  areas:["Choosing counsel","Track record","Relationships","Market view"],
+  cta:{t:"Compare counsel in Rainmaker", sub:"Firm and lawyer profiles with real deal records, moves and rankings."},
+  qs:[
+    {id:"b0",type:"size",key:"matters",p:"Roughly how many matters a year do you send to outside counsel?",
+     o:[{t:"1 to 5",v:3},{t:"6 to 15",v:10},{t:"16 to 40",v:25},{t:"More than 40",v:50}], unit:"matters a year"},
+    {id:"b1",type:"score",a:0,p:"How do you usually choose outside counsel for a new matter?",
+     o:[{t:"The firm we always use",s:1.5,share:90,rx:"Habit is safe, until it isn't."},
+        {t:"Whoever the deal team knows",s:4,share:70,rx:"That is choosing on relationships, not record."},
+        {t:"A short pitch from two or three firms",s:6.5,share:35,rx:"Better, as long as you can check the pitches."},
+        {t:"We compare firms on their record for this kind of deal",s:9,share:10,rx:"That is the standard."}],
+     fix:{move:"Choose counsel on their record",hurt:"Picking by habit means you never learn whether another firm does this kind of deal better.",work:"For each new matter, compare three firms on how many similar deals they did and which side they acted for.",why:"A side by side record makes the choice a decision, not a default.",feat:"Counsel profiles and Rankings",plan:"Use the shortlist scorecard in Part 2 on your next three matters."}},
+    {id:"b2",type:"score",a:0,p:"How often do you review whether your panel is still the right one?",
+     o:[{t:"Never really",s:1.5,rx:"So the panel reflects the past."},
+        {t:"When something goes wrong",s:4,rx:"That is reviewing after the cost."},
+        {t:"Every couple of years",s:6.5,rx:"Reasonable, but the market moves faster."},
+        {t:"Every year, with data",s:9,rx:"That keeps the panel honest."}],
+     fix:{move:"Review your panel every year, with data",hurt:"Lawyers move and firms change. A panel nobody reviews slowly drifts away from the work you need.",work:"Once a year, check each panel firm's recent deals, key lawyer moves and ranking in your sectors.",why:"Data turns the review from a debate into a short meeting.",feat:"Rankings and Moves",plan:"Book an annual panel review and pull each firm's last 12 months of deals for it."}},
+    {id:"b3",type:"score",a:1,p:"Can you see which firms acted on the most deals like yours last year?",
+     o:[{t:"No",s:1.5,rx:"Then the market leaders are a guess."},
+        {t:"Only from directories",s:4,rx:"Directories rank on what firms submit."},
+        {t:"From our own records",s:6.5,rx:"Your records only show your own deals."},
+        {t:"Yes, across the market",s:9,rx:"That is a full view."}],
+     fix:{move:"See who leads on deals like yours",hurt:"Without a market view, the firm with the best pitch wins over the firm with the best record.",work:"Rank firms by deal count and value in your sectors and deal sizes.",why:"A ranking from real deals shows who does this work most often.",feat:"Rankings",plan:"Pull the top ten firms by deal value in your main sector and compare them to your panel."}},
+    {id:"b4",type:"score",a:1,p:"When a firm pitches, how do you check what they claim?",
+     o:[{t:"We don't",s:1.5,rx:"So the pitch is the evidence."},
+        {t:"We ask for references",s:4,rx:"References are chosen by the firm."},
+        {t:"We check the press and directories",s:6.5,rx:"That is partly checked."},
+        {t:"We check their actual deal record",s:9,rx:"That is proper diligence."}],
+     fix:{move:"Check every pitch against the record",hurt:"A pitch is written to win. Unchecked claims cost you when the team that turns up is not the team that did the deals.",work:"Before a pitch meeting, pull the deals the firm and its named partners did in your sector.",why:"You test the claims with facts, not references the firm picked.",feat:"Lawyer profiles and Deals",plan:"Add a deal record check to every pitch you receive."}},
+    {id:"b5",type:"score",a:2,p:"When the partner you rely on moves firm, how soon do you know?",
+     o:[{t:"When they tell us",s:1.5,rx:"So you hear on their timing."},
+        {t:"Through the market, eventually",s:4,rx:"Eventually can be after the matter is affected."},
+        {t:"Fairly quickly, we stay close",s:6.5,rx:"Good, if you stay close to all of them."},
+        {t:"Straight away",s:9,rx:"That keeps you in control."}],
+     fix:{move:"Know when your key lawyers move",hurt:"Your relationship is often with the partner, not the firm. When they move, your matter can lose its best person.",work:"Follow the partners you rely on so a move reaches you the day it happens.",why:"Knowing early lets you decide whether to follow them or stay, before a matter suffers.",feat:"Moves and lawyer profiles",plan:"List the ten partners you rely on most and follow each one."}},
+    {id:"b6",type:"score",a:2,p:"Do you know which firms act for your rivals or usual counterparties?",
+     o:[{t:"No",s:1.5,rx:"Then conflicts and tactics are a surprise."},
+        {t:"For one or two",s:4,rx:"That is patchy."},
+        {t:"For most, from experience",s:6.5,rx:"Experience is good, but it lives in people's heads."},
+        {t:"Yes, and we track it",s:9,rx:"That is a real edge."}],
+     fix:{move:"Know who acts for the other side",hurt:"Not knowing who advises your rivals and counterparties means conflicts and tactics come as a surprise.",work:"Map the counsel used by your main rivals and frequent counterparties on their recent deals.",why:"Knowing the other side's counsel helps you plan and avoid conflicts early.",feat:"Deals and PE firm profiles",plan:"Map counsel for your five most frequent counterparties."}},
+    {id:"b7",type:"score",a:3,p:"Where do you get your legal market news?",
+     o:[{t:"We don't follow it",s:1.5,rx:"Then market changes reach you through your lawyers."},
+        {t:"Whatever the firms send us",s:4,rx:"That is news chosen to sell to you."},
+        {t:"Newsletters and the press",s:6.5,rx:"Independent, if slow."},
+        {t:"One feed filtered to our sectors",s:9,rx:"That is the efficient setup."}],
+     fix:{move:"Follow the market without the sales pitch",hurt:"News that comes from the firms themselves is news chosen to win your work.",work:"Set up a feed filtered to your sectors, jurisdictions and the firms on your panel.",why:"Independent news lets you judge firms on what happened, not on what they say.",feat:"Personalised feed",plan:"Set up a feed for your panel firms and main sectors."}},
+    {id:"b8",type:"score",a:3,p:"How easy is it to compare two firms side by side?",
+     o:[{t:"We can't",s:1.5,rx:"So comparisons come down to gut feel."},
+        {t:"It takes days of digging",s:4,rx:"Days per comparison means very few comparisons."},
+        {t:"A few hours",s:6.5,rx:"Doable, but only for big matters."},
+        {t:"Minutes",s:9,rx:"That is how it should be."}],
+     fix:{move:"Compare firms in minutes",hurt:"If comparing firms takes days, it only happens on the biggest matters and habit decides the rest.",work:"Use profiles that show each firm's deals, lawyers, moves and rankings in one view.",why:"When a comparison takes minutes, you can do it on every matter.",feat:"Law firm profiles",plan:"Compare your top two panel firms side by side before your next instruction."}},
+    {id:"g",type:"goal",p:"What matters most to you right now?",
+     o:[{t:"Pick counsel on their record",a:0},{t:"Check what firms claim",a:1},{t:"Track the lawyers we rely on",a:2},{t:"Compare firms faster",a:3}]}
+  ]},
+
+lawyer: {
+  label:"Individual lawyer", short:"Lawyer",
+  blurb:"How easily clients and recruiters can find your real record.",
+  bands:[
+    {n:"Hard to find", m:"Clients searching for your kind of work are unlikely to find your record."},
+    {n:"Found in places", m:"Parts of your record are visible, but scattered and out of date."},
+    {n:"Easy to find", m:"Your record is mostly visible and mostly current."},
+    {n:"Found first", m:"Your deals, clients and role are visible, verified and current."}],
+  part2:"profile",
+  areas:["Your deals","Your clients and practice","Being found","Keeping it current"],
+  cta:{t:"Claim your Rainmaker profile", sub:"Check and verify your position, deals and clients for free."},
+  qs:[
+    {id:"l1",type:"score",a:0,p:"How many of your recent deals are listed publicly under your name?",
+     o:[{t:"None that I know of",s:1.5,rx:"Then your best work is invisible."},
+        {t:"A few",s:4,rx:"A few undersells you."},
+        {t:"Most of the big ones",s:6.5,rx:"Good, and the smaller ones count too."},
+        {t:"All I am allowed to list",s:9,rx:"That is a full record."}],
+     fix:{move:"Get your deals listed under your name",hurt:"Clients and recruiters judge lawyers on deals. Deals not listed under your name do not count for you.",work:"Check which of your deals are already recorded and add the ones you are allowed to list.",why:"Your record then shows the work you have actually done.",feat:"Lawyer profiles",plan:"List your last 12 months of deals and check each one appears under your name."}},
+    {id:"l2",type:"score",a:0,p:"Does your public profile show which side you acted for?",
+     o:[{t:"No",s:1.5,rx:"The side matters as much as the deal."},
+        {t:"On some deals",s:4,rx:"That is patchy."},
+        {t:"On most",s:6.5,rx:"Nearly there."},
+        {t:"On every deal",s:9,rx:"Clear and complete."}],
+     fix:{move:"Show which side you acted for",hurt:"A buyer's lawyer and a seller's lawyer are different hires. Without the side, your record is half a story.",work:"Make sure each listed deal shows the side you advised and who you represented.",why:"The side tells a client whether you have done their exact job before.",feat:"Deals",plan:"Add the side and client to each deal on your profile."}},
+    {id:"l3",type:"score",a:1,p:"Can people see the types of clients you act for?",
+     o:[{t:"No",s:1.5,rx:"Then a general counsel can't tell if you fit."},
+        {t:"Only my firm's big names",s:4,rx:"That is the firm's record, not yours."},
+        {t:"Roughly",s:6.5,rx:"Roughly is a start."},
+        {t:"Yes, clearly",s:9,rx:"That helps the right clients find you."}],
+     fix:{move:"Show who you act for",hurt:"A general counsel wants someone who has acted for companies like theirs. If that is hidden, they move on.",work:"List the client types and named clients you are allowed to show.",why:"Clients look for people who have done it for someone like them.",feat:"Lawyer profiles",plan:"Add your client types and any named clients you can share."}},
+    {id:"l4",type:"score",a:1,p:"Are your practice areas and sectors listed clearly?",
+     o:[{t:"Not really",s:1.5,rx:"Then searches skip you."},
+        {t:"Broadly, like Corporate",s:4,rx:"Broad labels get lost."},
+        {t:"Mostly",s:6.5,rx:"Close."},
+        {t:"Yes, specific and current",s:9,rx:"That is how people find specialists."}],
+     fix:{move:"Name your practice and sectors precisely",hurt:"Broad labels put you among thousands. Specific ones put you on the shortlist.",work:"List your exact practice areas, sectors and jurisdictions.",why:"Specific labels match the searches clients actually run.",feat:"Lawyer profiles",plan:"Replace broad practice labels with your top three specific ones."}},
+    {id:"l5",type:"score",a:2,p:"If a general counsel searched for lawyers who did deals like yours, would you show up?",
+     o:[{t:"Unlikely",s:1.5,rx:"So that search finds your rivals."},
+        {t:"Maybe, on my firm's site",s:4,rx:"General counsel rarely search one firm's site."},
+        {t:"Probably, in directories",s:6.5,rx:"Directories help, if you submitted."},
+        {t:"Yes, with my deal record",s:9,rx:"That is being found."}],
+     fix:{move:"Show up when clients search",hurt:"General counsel compare lawyers across firms. If you only exist on your firm's site, you are not in the comparison.",work:"Make sure your profile on market platforms carries your deals, sides and sectors.",why:"Searches run across the market, so your record needs to be there too.",feat:"Lawyer profiles and Rankings",plan:"Search for your own work as a client would and fix what is missing."}},
+    {id:"l6",type:"score",a:2,p:"Have you claimed or checked your profile on market data platforms?",
+     o:[{t:"No, never looked",s:1.5,rx:"Then someone else is writing it."},
+        {t:"I've seen one but not checked it",s:4,rx:"Unchecked can mean wrong."},
+        {t:"I've checked one or two",s:6.5,rx:"Good start."},
+        {t:"Yes, claimed and verified",s:9,rx:"That is control of your record."}],
+     fix:{move:"Claim and verify your profile",hurt:"Unclaimed profiles can be incomplete or wrong, and you may not know what people see.",work:"Claim your profile and verify your position, deals and clients.",why:"A verified profile is the version people trust.",feat:"Claim profile",plan:"Claim your Rainmaker profile and verify it this week."}},
+    {id:"l7",type:"score",a:3,p:"When did you last update your public profile?",
+     o:[{t:"Can't remember",s:1.5,rx:"Then it probably misses your best recent work."},
+        {t:"Over a year ago",s:4,rx:"A year of deals is missing."},
+        {t:"In the last year",s:6.5,rx:"Fairly current."},
+        {t:"In the last three months",s:9,rx:"Current."}],
+     fix:{move:"Update your profile every quarter",hurt:"Your most recent deals are usually your most relevant. An old profile hides them.",work:"Set a quarterly reminder to add new deals and check your details.",why:"Twenty minutes a quarter keeps your record current.",feat:"Lawyer profiles",plan:"Put a 20 minute profile update in your diary every quarter."}},
+    {id:"l8",type:"score",a:3,p:"When you change firm or role, how fast does your profile follow?",
+     o:[{t:"It usually doesn't",s:1.5,rx:"So people find the old you."},
+        {t:"Months later",s:4,rx:"That is months of wrong details."},
+        {t:"When the firm updates its site",s:6.5,rx:"That runs on the firm's timing."},
+        {t:"Straight away, I do it myself",s:9,rx:"That is how it should work."}],
+     fix:{move:"Keep your role current yourself",hurt:"After a move, an out of date profile sends clients to your old firm.",work:"Update your position and firm yourself on the day a change happens.",why:"You control the timing, not your old or new firm.",feat:"Claim profile",plan:"Check your position and firm details are right on every profile you have."}},
+    {id:"g",type:"goal",p:"What matters most to you right now?",
+     o:[{t:"Be found by clients",a:2},{t:"Show my deal record",a:0},{t:"Show who I act for",a:1},{t:"Keep my profile current",a:3}]}
+  ]}
+};
+
+</script>
+<script>
+{
+const S = {seat:null, i:0, ans:{}, cur:"GBP", lever:50, sl:null, lead:null, sample:false, server:false};
+const SYM = {GBP:"£", USD:"$", EUR:"€"};
+const BANDHEX = ["#F46B6B","#F2B544","#45C9B8","#5FDB8C"];
+const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => Math.round(n).toLocaleString("en-GB");
+const money = n => SYM[S.cur] + fmt(n);
+const lc = s => s.replace(/^The /, "the ");
+const plural = (n, one, many) => n === 1 ? one : many;
+const bandOf = x => x < 4 ? 0 : x < 6 ? 1 : x < 8 ? 2 : 3;
+const ICONS = {
+  firm:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></svg>',
+  recruit:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 8h6M19 5l3 3-3 3"/></svg>',
+  buyer:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M5 7h14M5 7l-3 7h6zM19 7l-3 7h6zM8 21h8"/></svg>',
+  lawyer:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M8 17c.8-1.8 2.2-2.6 4-2.6s3.2.8 4 2.6"/></svg>'
+};
+
+function show(id){ ["home","quiz","gate","report"].forEach(x => $(x).classList.toggle("hide", x !== id)); window.scrollTo(0,0); if (id === "home") reveal(); }
+function goHome(){ show("home"); }
+$("homeLink").onclick = e => { e.preventDefault(); goHome(); };
+$("toStart").onclick = () => $("start").scrollIntoView({behavior: REDUCED ? "auto" : "smooth"});
+
+/* ---------- reveal and count up ---------- */
+let io = null;
+function countUp(el){
+  if (el.dataset.done) return; el.dataset.done = 1;
+  const to = +el.dataset.count, div = +(el.dataset.div || 1), suf = el.dataset.suffix || "", pre = el.dataset.prefix || "";
+  const t0 = performance.now(), d = REDUCED ? 0 : 1300;
+  const tick = t => { const p = d ? Math.min(1, (t - t0) / d) : 1; const e = 1 - Math.pow(1 - p, 3); const v = to * e / div;
+    el.textContent = pre + (div > 1 ? Math.round(v).toLocaleString("en-GB") : fmt(v)) + suf; if (p < 1) requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+function reveal(){
+  const els = document.querySelectorAll(".rv:not(.in), [data-count]:not([data-done]), .arow .bar i[data-w]");
+  if (!("IntersectionObserver" in window) || REDUCED){ els.forEach(fire); return; }
+  if (!io) io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ fire(e.target); io.unobserve(e.target); } }), {threshold:.15});
+  els.forEach(el => io.observe(el));
+}
+function fire(el){
+  if (el.classList.contains("rv")) el.classList.add("in");
+  if (el.dataset.count) countUp(el);
+  if (el.dataset.w) el.style.width = el.dataset.w;
+}
+
+/* ---------- home ---------- */
+function drawRoles(){
+  $("roles").innerHTML = Object.entries(SEATS).map(([k,s]) =>
+    `<button class="role" data-seat="${k}"><span class="ri">${ICONS[k]}</span><span class="rn">${esc(s.label)}</span><span class="rb">${esc(s.blurb)}</span><span class="rq">${s.qs.length} questions</span><span class="go">Start the check <span aria-hidden="true">→</span></span></button>`).join("");
+  document.querySelectorAll(".role").forEach(b => {
+    b.onclick = () => startSeat(b.dataset.seat);
+    b.onpointermove = e => { const r = b.getBoundingClientRect(); b.style.setProperty("--mx", (e.clientX - r.left) + "px"); b.style.setProperty("--my", (e.clientY - r.top) + "px"); };
+  });
+  const steps = [["Your scores","Four areas, scored, with what you already do well first."],["The cost","What late signals cost you, worked out from your own numbers."],["The gaps","Each gap with the challenge and the fix side by side."],["90 day plan","One area a month, in order, starting with your goal."],["Your answers","Every answer quoted back, with what it did."]];
+  $("steps").innerHTML = steps.map((s, i) => `<div class="step rv" style="transition-delay:${i * 70}ms"><div class="si">${i + 1}</div><h3>${s[0]}</h3><p>${s[1]}</p></div>`).join("");
+}
+const ZONES = HEAR_BANDS.slice().reverse();
+const WHO = [
+  "<b>Day 0.</b> The deal team, their counsel and the firms who track deals as they happen.",
+  "<b>Days 1 to 3.</b> Firms with a filtered feed on this sector. There is still time to call the client.",
+  "<b>Weeks 1 to 3.</b> Everyone reading the newsletters and legal press, including your rivals.",
+  "<b>Week 4 and later.</b> A rival has already called the client and pitched for the follow on work."
+];
+let hp = 4, userMoved = false;
+function setMarker(p){
+  p = Math.max(1, Math.min(99, p));
+  $("marker").style.left = p + "%";
+  $("shade").style.left = p + "%";
+  const zi = Math.min(3, Math.floor(p / 25)), z = ZONES[zi];
+  $("hvName").textContent = z.n; $("hvName").style.color = BANDHEX[3 - zi];
+  $("hvMean").textContent = z.m; $("hvWho").innerHTML = WHO[zi];
+  $("track").setAttribute("aria-valuenow", Math.round(p));
+  return p;
+}
+function initLine(){
+  const t = $("track");
+  const fromEv = e => { const r = t.getBoundingClientRect(); return (e.clientX - r.left) / r.width * 100; };
+  let drag = false;
+  t.addEventListener("pointerdown", e => { drag = true; userMoved = true; t.setPointerCapture(e.pointerId); hp = setMarker(fromEv(e)); });
+  t.addEventListener("pointermove", e => { if (drag) hp = setMarker(fromEv(e)); });
+  t.addEventListener("pointerup", () => drag = false);
+  t.addEventListener("keydown", e => { if (e.key === "ArrowLeft" || e.key === "ArrowRight"){ e.preventDefault(); userMoved = true; hp = setMarker(hp + (e.key === "ArrowRight" ? 4 : -4)); } });
+  setMarker(hp);
+  if (REDUCED) { hp = setMarker(62); return; }
+  const go = () => { let p = 4; const step = () => { if (userMoved) return; p += .9; hp = setMarker(p); if (p < 62) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+  if ("IntersectionObserver" in window){ const o = new IntersectionObserver(es => { if (es[0].isIntersecting){ o.disconnect(); setTimeout(go, 300); } }, {threshold:.5}); o.observe(t); } else go();
+}
+
+/* constellation: the market, connected */
+function initNet(){
+  const c = $("net"), x = c.getContext("2d");
+  let W, H, nodes = [], pulses = [], raf, dpr = Math.min(2, window.devicePixelRatio || 1);
+  const size = () => { W = c.clientWidth; H = c.clientHeight; c.width = W * dpr; c.height = H * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.round(Math.min(70, W * H / 16000));
+    nodes = Array.from({length:n}, () => ({x:Math.random() * W, y:Math.random() * H * .8, vx:(Math.random() - .5) * .18, vy:(Math.random() - .5) * .18, r:Math.random() * 1.6 + .6, hot:Math.random() < .12})); };
+  const link = 130;
+  const frame = () => {
+    x.clearRect(0, 0, W, H);
+    for (const n of nodes){ n.x += n.vx; n.y += n.vy; if (n.x < 0 || n.x > W) n.vx *= -1; if (n.y < 0 || n.y > H * .82) n.vy *= -1; }
+    for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++){
+      const a = nodes[i], b = nodes[j], d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d < link){ x.strokeStyle = `rgba(166,177,217,${(1 - d / link) * .28})`; x.lineWidth = 1; x.beginPath(); x.moveTo(a.x, a.y); x.lineTo(b.x, b.y); x.stroke();
+        if (!REDUCED && Math.random() < .0009 && pulses.length < 14) pulses.push({a, b, t:0}); } }
+    for (const n of nodes){ x.fillStyle = n.hot ? "rgba(94,166,255,.95)" : "rgba(255,255,255,.7)"; x.beginPath(); x.arc(n.x, n.y, n.hot ? n.r + 1 : n.r, 0, 7); x.fill();
+      if (n.hot){ x.fillStyle = "rgba(94,166,255,.15)"; x.beginPath(); x.arc(n.x, n.y, 7, 0, 7); x.fill(); } }
+    pulses = pulses.filter(p => { p.t += .015; if (p.t > 1) return false; const px = p.a.x + (p.b.x - p.a.x) * p.t, py = p.a.y + (p.b.y - p.a.y) * p.t;
+      x.fillStyle = "rgba(255,255,255,.95)"; x.shadowColor = "#5EA6FF"; x.shadowBlur = 10; x.beginPath(); x.arc(px, py, 2, 0, 7); x.fill(); x.shadowBlur = 0; return true; });
+    if (!REDUCED) raf = requestAnimationFrame(frame);
+  };
+  size(); frame();
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { cancelAnimationFrame(raf); size(); frame(); }, 150); });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) cancelAnimationFrame(raf); else if (!REDUCED){ cancelAnimationFrame(raf); frame(); } });
+}
+
+/* ---------- questionnaire ---------- */
+let advTimer = null, rec = null;
+const seat = () => SEATS[S.seat];
+function startSeat(k){ S.seat = k; S.i = 0; S.ans = {}; S.sl = null; S.sample = false; show("quiz"); drawQ(); }
+function loadSample(){
+  S.seat = "firm"; S.sl = null; S.sample = true; S.cur = "GBP"; S.lever = 50;
+  S.ans = {s1:{oi:2}, s2:{oi:1}, s3:{oi:2}, f1:{oi:1}, f2:{oi:0, text:"We know for a handful of anchor clients, the rest is guesswork"}, f3:{oi:1}, f4:{oi:2}, f5:{oi:1}, f6:{oi:1}, f7:{oi:1, text:"Partners forward things to BD and it often dies in the inbox"}, f8:{oi:2}, g:{oi:0}};
+  const c = compute();
+  S.lead = {name:"Sample report", org:"Harlow & Pike LLP (a made up firm)", email:"", seat: seat().label, band: seat().bands[c.band].n};
+  drawReport(); show("report"); animateReport();
+}
+$("sampleBtn").onclick = loadSample;
+function optLabel(q, o){ return q.money ? `About ${SYM[S.cur]}${fmt(o.v[S.cur])} an hour` : o.t; }
+function ruleText(q){
+  if (q.type === "size") return "Type a number and we use it as your figure, instead of the button.";
+  if (q.type === "goal") return "If you tap and type, the tap sets your plan order and your words are quoted in the report.";
+  return "Typed answers are quoted in your report. Only a tapped answer is scored.";
+}
+function drawQ(){
+  clearTimeout(advTimer); stopSpeech();
+  const s = seat(), q = s.qs[S.i], a = S.ans[q.id] || {}, n = s.qs.length;
+  $("segs").innerHTML = s.qs.map((_, i) => `<i class="${i < S.i ? "done" : i === S.i ? "now" : ""}"></i>`).join("");
+  $("qcount").textContent = `Question ${S.i + 1} of ${n}`;
+  $("qarea").textContent = q.type === "score" ? s.areas[q.a] : q.type === "size" ? "Your numbers" : "Your goal";
+  $("qprompt").textContent = q.p;
+  $("qprompt").style.animation = "none"; void $("qprompt").offsetWidth; $("qprompt").style.animation = "";
+  const cw = $("qcurs");
+  if (q.money){
+    cw.classList.remove("hide");
+    cw.innerHTML = Object.keys(SYM).map(c => `<button data-c="${c}" class="${c === S.cur ? "on" : ""}">${SYM[c]} ${c}</button>`).join("");
+    cw.querySelectorAll("button").forEach(b => b.onclick = () => { S.cur = b.dataset.c; drawQ(); });
+  } else cw.classList.add("hide");
+  let html = q.o.map((o, i) => `<button class="opt ${a.oi === i ? "on" : ""}" data-i="${i}" style="animation-delay:${i * 45}ms"><span class="k">${i + 1}</span><span class="t">${esc(optLabel(q, o))}</span>${a.oi === i ? '<span class="ok">Picked</span>' : ""}</button>`).join("");
+  if (q.type !== "goal") html += `<button class="opt ns ${a.oi === "ns" ? "on" : ""}" data-i="ns" style="animation-delay:${q.o.length * 45}ms"><span class="k">N</span><span class="t">Not sure</span>${a.oi === "ns" ? '<span class="ok">Picked</span>' : ""}</button>`;
+  $("qopts").innerHTML = html;
+  $("qopts").querySelectorAll(".opt").forEach(b => b.onclick = () => pick(b.dataset.i));
+  $("qrx").textContent = ""; $("qrx").classList.remove("show");
+  $("qtext").value = a.text || "";
+  $("qrule").textContent = ruleText(q);
+  $("qback").textContent = S.i === 0 ? "Change role" : "Back";
+  $("qnext").textContent = S.i === n - 1 ? "See my report" : "Continue";
+  updNext();
+}
+function updNext(){
+  const q = seat().qs[S.i], a = S.ans[q.id] || {};
+  $("qnext").disabled = !(a.oi !== undefined && a.oi !== null) && !(a.text && a.text.trim());
+}
+function pick(i){
+  const q = seat().qs[S.i];
+  const a = S.ans[q.id] = S.ans[q.id] || {};
+  a.oi = i === "ns" ? "ns" : +i;
+  a.text = $("qtext").value;
+  const keepIdx = S.i;
+  drawQ();
+  const o = a.oi === "ns" ? null : q.o[a.oi];
+  let rx = "";
+  if (a.oi === "ns") rx = q.type === "size" ? "Fine. We will use a middle figure and say so." : "Fine. We will estimate this one and mark it.";
+  else if (o.rx) rx = o.rx;
+  else if (q.type === "size") rx = q.money ? "Noted. That rate drives the cost in Part 2." : `Noted: ${optLabel(q, o).toLowerCase()} ${q.unit}.`;
+  else if (q.type === "goal") rx = "Noted. Your plan will start there.";
+  $("qrx").textContent = rx; $("qrx").classList.add("show");
+  if (!$("qtext").value.trim()) advTimer = setTimeout(() => { if (S.i === keepIdx && !$("quiz").classList.contains("hide")) next(); }, 1150);
+}
+function next(){
+  clearTimeout(advTimer);
+  const q = seat().qs[S.i];
+  const a = S.ans[q.id] = S.ans[q.id] || {};
+  a.text = $("qtext").value;
+  if (S.i < seat().qs.length - 1){ S.i++; drawQ(); } else openGate();
+}
+$("qnext").onclick = next;
+$("qback").onclick = () => { clearTimeout(advTimer); if (S.i === 0) goHome(); else { S.i--; drawQ(); } };
+$("qtext").addEventListener("input", () => {
+  clearTimeout(advTimer);
+  const q = seat().qs[S.i]; const a = S.ans[q.id] = S.ans[q.id] || {};
+  a.text = $("qtext").value; updNext();
+});
+document.addEventListener("keydown", e => {
+  if ($("quiz").classList.contains("hide") || e.target.tagName === "TEXTAREA" || e.metaKey || e.ctrlKey) return;
+  const q = seat().qs[S.i];
+  if (/^[1-9]$/.test(e.key) && +e.key <= q.o.length){ e.preventDefault(); pick(+e.key - 1); }
+  else if ((e.key === "n" || e.key === "N") && q.type !== "goal"){ e.preventDefault(); pick("ns"); }
+  else if (e.key === "Enter" && !$("qnext").disabled && document.activeElement.tagName !== "BUTTON"){ e.preventDefault(); next(); }
+});
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!SR) $("qspeak").classList.add("hide");
+function stopSpeech(){ if (rec){ try{ rec.stop(); }catch(e){} rec = null; } $("qspeak").classList.remove("on"); $("qspeak").textContent = "Speak it"; }
+$("qspeak").onclick = () => {
+  if (rec){ stopSpeech(); return; }
+  clearTimeout(advTimer);
+  rec = new SR(); rec.lang = "en-GB"; rec.interimResults = false;
+  const base = $("qtext").value;
+  rec.onresult = e => { const t = Array.from(e.results).map(r => r[0].transcript).join(" "); $("qtext").value = (base ? base + " " : "") + t; $("qtext").dispatchEvent(new Event("input")); };
+  rec.onend = stopSpeech;
+  rec.onerror = e => { stopSpeech(); if (e && (e.error === "not-allowed" || e.error === "service-not-allowed")){ $("qspeak").classList.add("hide"); $("qrule").textContent = "Voice input is blocked in this view, so please type instead."; } };
+  try{ rec.start(); $("qspeak").classList.add("on"); $("qspeak").textContent = "Stop"; }catch(e){ stopSpeech(); }
+};
+
+/* ---------- scoring ---------- */
+function compute(){
+  const s = seat(), qs = s.qs;
+  const qres = qs.filter(q => q.type === "score").map(q => {
+    const a = S.ans[q.id] || {}, tapped = typeof a.oi === "number";
+    return {q, a, tapped, sc: tapped ? q.o[a.oi].s : null};
+  });
+  const areas = s.areas.map((name, ai) => {
+    const m = qres.filter(r => r.q.a === ai && r.sc !== null);
+    return {name, ai, sc: m.length ? m.reduce((x, r) => x + r.sc, 0) / m.length : null, est:false};
+  });
+  const measured = areas.filter(a => a.sc !== null);
+  const avg = measured.length ? measured.reduce((x, a) => x + a.sc, 0) / measured.length : null;
+  areas.forEach(a => { if (a.sc === null){ a.sc = avg; a.est = true; } });
+  const overall = avg === null ? null : areas.reduce((x, a) => x + a.sc, 0) / areas.length;
+  const band = overall === null ? 0 : bandOf(overall);
+  const weakest = areas.slice().sort((x, y) => x.sc - y.sc)[0];
+  const gaps = qres.filter(r => r.sc !== null && r.sc < 6).sort((x, y) => x.sc - y.sc);
+  const strengths = qres.filter(r => r.sc !== null && r.sc >= 6);
+  const goalQ = qs.find(q => q.type === "goal"), ga = S.ans[goalQ.id] || {};
+  const goal = {q: goalQ, a: ga, opt: typeof ga.oi === "number" ? goalQ.o[ga.oi] : null};
+  return {s, qres, areas, overall, band, weakest, gaps, strengths, goal, tapCount: qres.filter(r => r.tapped).length};
+}
+function sizeVal(id){
+  const q = seat().qs.find(x => x.id === id); if (!q) return null;
+  const a = S.ans[id] || {};
+  const m = (a.text || "").replace(/,/g, "").match(/\d+(\.\d+)?/);
+  if (m) return {v: parseFloat(m[0]), how: "typed"};
+  if (typeof a.oi === "number"){ const o = q.o[a.oi]; return {v: q.money ? o.v[S.cur] : o.v, how: "tapped"}; }
+  const o = q.o[1]; return {v: q.money ? o.v[S.cur] : o.v, how: "est"};
+}
+
+/* ---------- gate ---------- */
+function openGate(){
+  const c = compute();
+  show("gate");
+  if (c.tapCount < 2){
+    $("readyChips").innerHTML = "";
+    $("gErr").textContent = "We need at least two tapped answers to score this. Your typed answers are kept. Go back and tap the closest option on a couple of questions.";
+    $("gGo").textContent = "Go back to the questions"; $("gGo").onclick = () => { S.i = 0; show("quiz"); drawQ(); }; return;
+  }
+  $("readyChips").innerHTML = [`${c.gaps.length} ${plural(c.gaps.length, "gap", "gaps")} found`, "90 day plan", `${seat().qs.length} answers quoted`].map(t => `<span>${t}</span>`).join("");
+  $("gErr").textContent = ""; $("gGo").textContent = "Show my report"; $("gGo").onclick = submitGate;
+}
+function submitGate(){
+  const name = $("gName").value.trim(), org = $("gOrg").value.trim(), email = $("gEmail").value.trim();
+  if (!name || !org){ $("gErr").textContent = "Please add your name and your firm or company."; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ $("gErr").textContent = "That email does not look right. Please check it."; return; }
+  const c = compute();
+  S.lead = {name, org, email, seat: seat().label, band: seat().bands[c.band].n, overall: +c.overall.toFixed(1), weakest: c.weakest.name, weakest_score: +c.weakest.sc.toFixed(1),
+    gaps: c.gaps.map(g => ({area: seat().areas[g.q.a], question: g.q.p, answer: g.q.o[g.a.oi].t, score: g.sc})),
+    answers: seat().qs.map(q => { const a = S.ans[q.id] || {}; return {question: q.p, answer: typeof a.oi === "number" ? optLabel(q, q.o[a.oi]) : (a.oi === "ns" ? "Not sure" : ""), own_words: a.text || ""}; }),
+    goal: c.goal.opt ? c.goal.opt.t : (c.goal.a.text || ""), at: new Date().toISOString()};
+  try{ const k = "lsc_leads"; const l = JSON.parse(localStorage.getItem(k) || "[]"); l.push(S.lead); localStorage.setItem(k, JSON.stringify(l)); }catch(e){}
+  if (S.server){ try{ fetch("/api/lead", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(S.lead)}).catch(() => {}); }catch(e){} }
+  drawReport(); show("report"); animateReport();
+}
+
+/* ---------- report visuals ---------- */
+function gaugeSVG(score, col){
+  const r = 70, C = 2 * Math.PI * r;
+  return `<svg viewBox="0 0 170 170" aria-hidden="true"><circle cx="85" cy="85" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/>
+    <circle id="gArc" cx="85" cy="85" r="${r}" fill="none" stroke="${col}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}" data-off="${C * (1 - score / 10)}" style="transition:stroke-dashoffset 1.4s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 8px ${col}66)"/></svg>`;
+}
+function wrapLabel(t, max){
+  const w = t.split(" "), lines = [""];
+  w.forEach(x => { const l = lines[lines.length - 1]; if ((l + " " + x).trim().length > max && l) lines.push(x); else lines[lines.length - 1] = (l + " " + x).trim(); });
+  return lines;
+}
+function radarSVG(areas){
+  const W = 480, H = 330, cx = 240, cy = 168, R = 104;
+  const ang = [-90, 0, 90, 180].map(d => d * Math.PI / 180);
+  const P = (i, v) => [cx + Math.cos(ang[i]) * R * v / 10, cy + Math.sin(ang[i]) * R * v / 10];
+  let s = `<svg class="radar" viewBox="0 0 ${W} ${H}" role="img" aria-label="Your four area scores">`;
+  [2.5, 5, 7.5, 10].forEach(v => s += `<polygon class="ring" points="${[0,1,2,3].map(i => P(i, v).join(",")).join(" ")}"/>`);
+  s += `<polygon class="six" points="${[0,1,2,3].map(i => P(i, 6).join(",")).join(" ")}"/>`;
+  [0,1,2,3].forEach(i => { const [x, y] = P(i, 10); s += `<line class="ax" x1="${cx}" y1="${cy}" x2="${x}" y2="${y}"/>`; });
+  s += `<polygon class="shape" id="rShape" points="${[0,1,2,3].map(() => cx + "," + cy).join(" ")}" data-pts="${areas.map((a, i) => P(i, a.sc).join(",")).join(" ")}" style="transition:all 1.2s cubic-bezier(.2,.8,.2,1)"/>`;
+  areas.forEach((a, i) => { const [x, y] = P(i, a.sc); s += `<circle class="pt" cx="${x}" cy="${y}" r="3.5"/>`; });
+  areas.forEach((a, i) => {
+    const lines = wrapLabel(a.name, 14), val = (a.est ? "≈" : "") + a.sc.toFixed(1);
+    let x, y, anchor;
+    if (i === 0){ x = cx; anchor = "middle"; y = cy - R - 14 - lines.length * 16; }
+    else if (i === 2){ x = cx; anchor = "middle"; y = cy + R + 22; }
+    else if (i === 1){ x = cx + R + 14; anchor = "start"; y = cy - (lines.length * 16) / 2 - 2; }
+    else { x = cx - R - 14; anchor = "end"; y = cy - (lines.length * 16) / 2 - 2; }
+    s += `<text text-anchor="${anchor}" x="${x}" y="${y}">` + lines.map((l, k) => `<tspan class="lb" x="${x}" dy="${k ? 16 : 0}">${esc(l)}</tspan>`).join("") + `<tspan class="lv" x="${x}" dy="18">${val}</tspan></text>`;
+  });
+  return s + "</svg>";
+}
+function animateReport(){
+  reveal();
+  setTimeout(() => {
+    const g = $("gArc"); if (g) g.style.strokeDashoffset = g.dataset.off;
+    const r = $("rShape"); if (r) r.setAttribute("points", r.dataset.pts);
+  }, REDUCED ? 0 : 150);
+}
+
+/* ---------- report ---------- */
+function drawReport(){
+  const c = compute(), s = c.s, L = S.lead, B = s.bands[c.band];
+  const sc1 = x => x.toFixed(1);
+  const areaRows = c.areas.map(a => `<div class="arow"><span class="an">${esc(a.name)}${a.est ? ' <span class="est">estimated, not measured</span>' : ""}</span><span class="bar"><i data-w="${a.sc * 10}%" style="background:${BANDHEX[bandOf(a.sc)]}"></i></span><span class="av">${a.est ? "≈" : ""}${sc1(a.sc)}</span></div>`).join("");
+  const strengths = c.strengths.length
+    ? c.strengths.map(r => `<li><b>${esc(s.areas[r.q.a])}:</b> ${esc(r.q.o[r.a.oi].t)}</li>`).join("")
+    : `<li>Nothing scored 6 or above this time. Every area has room to improve, so Part 4 starts with the quickest win.</li>`;
+  const first = c.gaps[0];
+  const startCard = first
+    ? `<div class="box glass start"><div class="tagl">Start here</div><h3>${esc(first.q.fix.move)}</h3><ul><li>Your lowest scoring answer, in ${esc(lc(s.areas[first.q.a]))}.</li><li>Part 3 explains the gap and Part 4 puts it in the first 30 days.</li></ul></div>`
+    : `<div class="box glass start"><div class="tagl">Start here</div><h3>Keep your lead</h3><ul><li>No answer scored below 6.</li><li>Part 4 lists the steps that keep it that way.</li></ul></div>`;
+
+  let p2 = "";
+  if (s.part2 === "time"){
+    const pe = sizeVal("s1"), hr = sizeVal("s2"), rt = sizeVal("s3");
+    const hours = pe.v * hr.v * 46, cost = hours * rt.v, weeks = hours / 37.5, back = cost * S.lever / 100;
+    const note = x => x.how === "typed" ? " (your figure)" : x.how === "est" ? " (estimated, you were not sure)" : "";
+    const rounded = Math.round(cost / 100) * 100;
+    p2 = `<div class="eyebrow">Part 2</div><h2>What Searching For Market Data Costs You</h2>
+      <p class="lead">Worked out only from the three numbers you gave us.<span class="curpick">${Object.keys(SYM).map(k => `<button data-c="${k}" class="${k === S.cur ? "on" : ""}">${SYM[k]}</button>`).join("")}</span></p>
+      <div class="bignum"><span data-count="${rounded}" data-prefix="${SYM[S.cur]}">${money(rounded)}</span><small> a year</small></div>
+      <p class="lead">That is ${fmt(hours)} hours, or about ${fmt(weeks)} working weeks, spent finding deals, news and moves by hand.</p>
+      <div class="working">${fmt(pe.v)} people${note(pe)} × ${fmt(hr.v)} hours a week${note(hr)} × 46 working weeks × ${money(rt.v)} an hour${note(rt)} = ${money(cost)}</div>
+      <div class="lever glass"><label><span>If you got back this share of that time</span><span id="lvPct">${S.lever}%</span></label>
+        <input type="range" id="lever" min="10" max="90" step="5" value="${S.lever}" aria-label="Share of time you get back">
+        <div class="lv" id="lvVal">${money(Math.round(back / 100) * 100)} a year back</div>
+        <p class="small">You set this share. We do not claim a number for it, because only you know how much of the searching one feed would replace.</p></div>
+      <div class="explain"><div class="et">What is not in this number</div><ul>
+        <li>Mandates you heard about after a rival had pitched.</li>
+        <li>Clients and partners that moved before you noticed.</li>
+        <li>We do not price those, because we would have to guess what each one was worth. They usually cost far more than the hours.</li></ul></div>`;
+  } else if (s.part2 === "matters"){
+    const mt = sizeVal("b0"), a1 = S.ans.b1 || {}, q1 = s.qs.find(q => q.id === "b1");
+    const share = typeof a1.oi === "number" ? q1.o[a1.oi].share : 50;
+    const habit = Math.round(mt.v * share / 100);
+    p2 = `<div class="eyebrow">Part 2</div><h2>How Many Matters Are Chosen On Habit</h2>
+      <p class="lead">Counted from two of your answers. We do not put a price on it.</p>
+      <div class="bignum"><span data-count="${habit}">${fmt(habit)}</span><small> ${plural(habit, "matter", "matters")} a year</small></div>
+      <p class="lead">That is roughly how many matters a year go to a firm without anyone comparing its record against another.</p>
+      <div class="working">${fmt(mt.v)} matters a year${mt.how === "typed" ? " (your figure)" : mt.how === "est" ? " (estimated)" : ""} × ${share}% chosen mostly on habit${typeof a1.oi === "number" ? ", from how you said you choose counsel" : " (estimated, you were not sure)"} = ${fmt(habit)}</div>
+      <div class="explain"><div class="et">Why there is no price on this</div><ul>
+        <li>A habit choice is often the right firm. The cost is that you never find out.</li>
+        <li>Pricing it would mean guessing the fees and outcomes of firms you did not hire.</li></ul></div>
+      <div class="sl glass"><h3>Your Counsel Shortlist Scorecard</h3><p class="lead" style="margin-top:8px">Set what matters, name up to three firms and rate each one from 1 to 5. The ranking updates as you go.</p>
+        <div class="slg" id="slw"></div><div class="tw"><table><thead><tr><th>Firm</th><th>Track record</th><th>Sector</th><th>Relationship</th><th>Fees</th><th>Score</th></tr></thead><tbody id="slb"></tbody></table></div></div>`;
+  } else {
+    const strength = Math.round(c.overall * 10);
+    const items = c.qres.map(r => `<li class="${r.sc !== null && r.sc >= 6 ? "y" : "n"}"><i>${r.sc !== null && r.sc >= 6 ? "✓" : "!"}</i><span>${esc(r.q.fix.move)}${r.sc === null ? " (not scored)" : ""}</span></li>`).join("");
+    p2 = `<div class="eyebrow">Part 2</div><h2>Your Profile Strength</h2>
+      <p class="lead">Your overall score out of 10, shown out of 100. It measures how much of your real record a client could find today.</p>
+      <div class="bignum"><span data-count="${strength}">${strength}</span><small> out of 100</small></div>
+      <div class="working">Average of your four area scores, ${sc1(c.overall)} out of 10, × 10 = ${strength}</div>
+      <ul class="checks">${items}</ul>
+      <div class="explain"><div class="et">How to read the list</div><ul><li>A tick means your answer scored 6 or more.</li><li>An exclamation mark means it is a gap, explained in Part 3.</li></ul></div>`;
+  }
+
+  const gapCards = c.gaps.length ? c.gaps.map((g, i) => {
+    const high = g.sc < 3;
+    return `<div class="gap rv"><div class="gaphead"><span class="gn">Gap ${i + 1} of ${c.gaps.length}</span><span class="gt">${esc(s.areas[g.q.a])}: ${esc(g.q.fix.move)}</span><span class="sev ${high ? "high" : "med"}">${high ? "High" : "Medium"}</span></div>
+      <div class="gapbody"><div><h4>The challenge</h4><ul>
+        <li><b>In answer to</b>${esc(g.q.p)}</li><li><b>You said</b>${esc(g.q.o[g.a.oi].t)}</li>
+        <li><b>This answer scored</b>${g.sc.toFixed(1)} out of 10</li>
+        <li><b>Why it hurts</b>${esc(g.q.fix.hurt)}</li>
+        ${g.a.text && g.a.text.trim() ? `<li><b>Your own words</b><span class="quote">"${esc(g.a.text.trim())}"</span></li>` : ""}</ul></div>
+      <div class="fixcol"><h4>The fix</h4><ul><li><b>The work</b>${esc(g.q.fix.work)}</li><li><b>Why it closes this</b>${esc(g.q.fix.why)}</li><li><b>In Rainmaker</b><span class="feat">${esc(g.q.fix.feat)}</span></li></ul></div></div></div>`;
+  }).join("") : `<div class="box glass"><h3>No gaps found</h3><ul><li>Every answer you tapped scored 6 or more.</li></ul></div>`;
+
+  let order = [];
+  const gapAreas = [...new Set(c.gaps.map(g => g.q.a))];
+  const gA = c.goal.opt ? c.goal.opt.a : null;
+  if (gA !== null && gapAreas.includes(gA)) order.push(gA);
+  gapAreas.forEach(a => { if (!order.includes(a)) order.push(a); });
+  const later = order.slice(3); order = order.slice(0, 3);
+  const days = ["Days 1 to 30", "Days 31 to 60", "Days 61 to 90"];
+  const phases = order.length
+    ? order.map((ai, i) => `<div class="phase glass rv" style="transition-delay:${i * 90}ms"><div class="dot"></div><div class="pd">${days[i]}</div><h3>${esc(s.areas[ai])}</h3><ul>${c.gaps.filter(g => g.q.a === ai).map(g => `<li>${esc(g.q.fix.plan)}</li>`).join("")}</ul>${ai === gA ? '<div class="gl">First because it matches your goal</div>' : ""}</div>`).join("")
+    : c.qres.filter(r => r.sc !== null).sort((x, y) => x.sc - y.sc).slice(0, 3).map((r, i) => `<div class="phase glass rv"><div class="dot"></div><div class="pd">${days[i]}</div><h3>${esc(s.areas[r.q.a])}</h3><ul><li>${esc(r.q.fix.plan)}</li></ul></div>`).join("");
+  const gText = c.goal.a.text && c.goal.a.text.trim();
+  const goalLine = c.goal.opt || gText
+    ? `<div class="explain"><div class="et">Your goal</div><ul>${c.goal.opt ? `<li>You picked: ${esc(c.goal.opt.t)}.${gA !== null && gapAreas.includes(gA) ? " That area goes first." : " That area has no gaps, so the plan follows your lowest scores."}</li>` : ""}${gText ? `<li>In your words: <span class="quote">"${esc(gText)}"</span></li>` : ""}</ul></div>` : "";
+
+  const rows = s.qs.map(q => {
+    const a = S.ans[q.id] || {};
+    const ans = typeof a.oi === "number" ? optLabel(q, q.o[a.oi]) : a.oi === "ns" ? "Not sure" : "No option tapped";
+    let ef;
+    if (q.type === "score") ef = typeof a.oi === "number" ? `Scored ${q.o[a.oi].s.toFixed(1)}` : a.oi === "ns" ? "Estimated" : "Quoted, not scored";
+    else if (q.type === "size"){ const v = sizeVal(q.id); ef = v.how === "typed" ? "Your typed figure used" : v.how === "est" ? "Middle figure used" : "Used in Part 2"; }
+    else ef = typeof a.oi === "number" ? "Sets plan order" : "Quoted only";
+    const own = a.text && a.text.trim() ? `<div class="quote">"${esc(a.text.trim())}"</div>` : "";
+    return `<tr><td>${esc(q.p)}</td><td>${esc(ans)}${own}</td><td class="ef">${ef}</td></tr>`;
+  }).join("");
+
+  const nGap = c.gaps.length, col = BANDHEX[c.band];
+  $("report").innerHTML = `
+  <section class="rhero"><div class="sky"></div><div class="grain"></div><div class="wrap">
+    ${S.sample ? '<div class="samplebadge">Sample report: made up firm and answers, to show what the check produces</div>' : ""}<div class="eyebrow">The Late Signal Check: ${esc(s.label)}</div>
+    <h1>${esc(B.n)}.</h1>
+    <p class="who2">${S.sample ? "Prepared for Harlow &amp; Pike LLP, a made up mid size firm" : "Prepared for " + esc(L.name) + ", " + esc(L.org)}</p>
+    <div class="vgrid">
+      <div class="vcard glass"><div class="k">Your overall score</div>
+        <div class="gaugewrap"><div class="gauge">${gaugeSVG(c.overall, col)}<div class="gv"><div><b>${sc1(c.overall)}</b><small>out of 10</small></div></div></div>
+        <div class="gaugetxt"><div class="bn" style="color:${col}">${esc(B.n)}</div><p>${esc(B.m)}</p></div></div>
+        <div class="bandstrip">${s.bands.map((b, i) => `<div class="${i === c.band ? "on" : ""}" style="${i === c.band ? "background:" + BANDHEX[i] + ";border-color:" + BANDHEX[i] : ""}">${esc(b.n)}<span>${["0 to 4", "4 to 6", "6 to 8", "8 to 10"][i]}</span></div>`).join("")}</div></div>
+      <div class="vcard glass"><div class="k">Your four areas</div>${radarSVG(c.areas)}
+        <div class="radarkey"><span><i></i>Your scores</span><span><i class="d"></i>The line at 6: below it is a gap</span></div>
+        <p class="rm" style="margin-top:8px">Weakest: <b style="color:#fff">${esc(c.weakest.name)}</b>, ${c.weakest.est ? "≈" : ""}${sc1(c.weakest.sc)}. ${nGap ? `${nGap} ${plural(nGap, "answer", "answers")} scored under 6.` : "No answer scored under 6."}</p></div>
+    </div>
+    <div class="howread">
+      <div><b>Scores run 0 to 10</b>Each tapped answer has a set score. An area is the average of its answers.</div>
+      <div><b>Under 6 is a gap</b>Under 3 is high, 3 to 6 is medium.</div>
+      <div><b>Your words, quoted</b>Typed answers are shown in Part 5, never scored.</div>
+    </div>
+  </div></section>
+  <nav class="pnav"><div class="wrap"><a href="#p1">1 Your scores</a><a href="#p2">2 ${s.part2 === "time" ? "The cost" : s.part2 === "matters" ? "The count" : "Profile strength"}</a><a href="#p3">3 Gaps</a><a href="#p4">4 90 day plan</a><a href="#p5">5 Your answers</a></div></nav>
+  <section class="part" id="p1"><div class="wrap"><div class="eyebrow">Part 1</div><h2>Your Scores By Area</h2><p class="lead">What you already do well comes first. Then where to start. The dashed line on each bar marks 6.</p>
+    <div class="areas">${areaRows}</div>
+    <div class="two"><div class="box glass"><h3>What You Already Do Well</h3><ul>${strengths}</ul></div>${startCard}</div></div></section>
+  <section class="part" id="p2"><div class="wrap">${p2}</div></section>
+  <section class="part" id="p3"><div class="wrap"><div class="eyebrow">Part 3</div><h2>The Gaps, Worst First</h2><p class="lead">Each card puts the challenge on the left and the fix on the right.</p>${gapCards}</div></section>
+  <section class="part" id="p4"><div class="wrap"><div class="eyebrow">Part 4</div><h2>Your 90 Day Plan</h2><p class="lead">One area a month, in order.${c.gaps.length ? "" : " No gaps, so these steps protect your lowest scores."}</p>${goalLine}<div class="phases">${phases}</div>${later.length ? `<div class="explain"><div class="et">After day 90</div><ul>${later.map(ai => `<li>${esc(s.areas[ai])}: the gaps in Part 3 for this area come next.</li>`).join("")}</ul></div>` : ""}</div></section>
+  <section class="part" id="p5"><div class="wrap"><div class="eyebrow">Part 5</div><h2>Every Answer You Gave</h2><p class="lead">Quoted exactly as you tapped or typed it, with what each one did.</p>
+    <table class="rec"><thead><tr><th>Question</th><th>Your answer</th><th>What it did</th></tr></thead><tbody>${rows}</tbody></table></div></section>
+  <section class="closing"><div class="sky"></div><div class="grain"></div><div class="wrap"><h2>${esc(s.cta.t)}.</h2><p>${esc(s.cta.sub)}</p>
+    <div class="row"><a class="btn" href="https://rmkr.ai/landing-page" target="_blank" rel="noopener">${s.part2 === "profile" ? "Claim your profile" : "Book a demo"}</a><button class="btn ghost" id="dl">Copy my report</button><button class="btn ghost" id="again">${S.sample ? "Take the check yourself" : "Start again"}</button></div>
+    <p class="honest">${S.sample ? "Sample data only. Harlow &amp; Pike LLP is not a real firm." : (S.server ? "Your details are saved and the Rainmaker team can follow up with you." : "Demo build: your details are saved in this browser only and are not sent anywhere yet.")}</p></div></section>`;
+
+  $("dl").onclick = copyReport;
+  $("again").onclick = () => { S.ans = {}; S.lead = null; S.sample = false; goHome(); setTimeout(() => $("start").scrollIntoView(), 50); };
+  document.querySelectorAll(".curpick button").forEach(b => b.onclick = () => { S.cur = b.dataset.c; const y = window.scrollY; drawReport(); animateReport(); window.scrollTo(0, y); });
+  const lv = $("lever");
+  if (lv){
+    const cost = sizeVal("s1").v * sizeVal("s2").v * 46 * sizeVal("s3").v;
+    lv.oninput = () => { S.lever = +lv.value; $("lvPct").textContent = S.lever + "%"; $("lvVal").textContent = money(Math.round(cost * S.lever / 100 / 100) * 100) + " a year back"; };
+  }
+  if (s.part2 === "matters") drawShortlist();
+  const links = [...document.querySelectorAll(".pnav a")];
+  if ("IntersectionObserver" in window){
+    const po = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) links.forEach(l => l.classList.toggle("on", l.getAttribute("href") === "#" + e.target.id)); }), {rootMargin:"-40% 0px -55% 0px"});
+    document.querySelectorAll(".part").forEach(p => po.observe(p));
+  }
+}
+
+function drawShortlist(){
+  if (!S.sl) S.sl = {w:[5, 3, 2, 2], f:[{n:"", r:[3,3,3,3]}, {n:"", r:[3,3,3,3]}, {n:"", r:[3,3,3,3]}]};
+  const names = ["Track record on deals like this", "Sector experience", "Your relationship", "Fees"];
+  $("slw").innerHTML = names.map((n, i) => `<label>${n}: <span id="wv${i}">${S.sl.w[i]}</span><input type="range" min="0" max="5" value="${S.sl.w[i]}" data-w="${i}" aria-label="Weight for ${n}"></label>`).join("");
+  const body = () => {
+    const tot = S.sl.f.map(f => S.sl.w.reduce((x, w, i) => x + w * f.r[i], 0));
+    const max = S.sl.w.reduce((x, w) => x + w * 5, 0) || 1, best = Math.max(...tot);
+    $("slb").innerHTML = S.sl.f.map((f, fi) => { const pct = Math.round(tot[fi] / max * 100);
+      return `<tr class="${tot[fi] === best && f.n ? "win" : ""}"><td><input type="text" data-f="${fi}" placeholder="Firm ${fi + 1}" value="${esc(f.n)}" aria-label="Firm ${fi + 1} name"></td>${f.r.map((r, ri) => `<td><select data-f="${fi}" data-r="${ri}" aria-label="Rating">${[1,2,3,4,5].map(v => `<option ${v === r ? "selected" : ""}>${v}</option>`).join("")}</select></td>`).join("")}<td class="tot">${pct}<div class="wbar" style="width:${pct}%"></div></td></tr>`; }).join("");
+    $("slb").querySelectorAll("input").forEach(el => el.onchange = () => { S.sl.f[+el.dataset.f].n = el.value; body(); });
+    $("slb").querySelectorAll("select").forEach(el => el.onchange = () => { S.sl.f[+el.dataset.f].r[+el.dataset.r] = +el.value; body(); });
+  };
+  $("slw").querySelectorAll("input").forEach(el => el.oninput = () => { S.sl.w[+el.dataset.w] = +el.value; $("wv" + el.dataset.w).textContent = el.value; body(); });
+  body();
+}
+async function copyReport(){
+  const b = $("dl");
+  try{ await navigator.clipboard.writeText($("report").innerText.replace(/\n{3,}/g, "\n\n")); b.textContent = "Copied"; }
+  catch(e){ b.textContent = "Copy not allowed here"; }
+  setTimeout(() => b.textContent = "Copy my report", 2200);
+}
+
+drawRoles(); initLine(); initNet(); reveal();
+if (location.protocol.startsWith("http")){ try{ fetch("/api/config").then(r => r.ok ? r.json() : null).then(c => { if (c && c.ok) S.server = true; }).catch(() => {}); }catch(e){} }
+}
+</script>
+</body>
+</html>
